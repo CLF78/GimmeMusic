@@ -1,8 +1,15 @@
 """
-Fuck globals, all my homies hate globals
+Globals to be used by the program.
+NOTE: Do NOT include this in plugins!
 """
 
 import os
+
+# HTML parser for BeautifulSoup
+htmlparser = 'html.parser'
+
+# Log buffer for printing
+logbuffer = None
 
 # Files/folders
 path = os.path.dirname(os.path.abspath(__file__))

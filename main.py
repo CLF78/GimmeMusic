@@ -1,42 +1,51 @@
 #!/usr/bin/env python3
 
 # main.py
-# This is the main executable for AngerList.
+# This is the main executable for GimmeMusic.
+
+# TODO: lxml import check
+# TODO: add __main__ check to every other file
 
 # Python version check
+# Currently, QtPy only supports Python 3.7+, so we follow suit
 import sys
-if sys.version_info < (3, 6):
-    raise Exception('Please update your copy of Python to 3.6 or greater. Currently running on: ' + sys.version.split()[0])
+if sys.version_info < (3, 7):
+    raise Exception('Please update your copy of Python to 3.7 or greater. Currently running on: ' + sys.version.split()[0])
 
-# Stdlib imports
+# Standard imports
 import configparser
+import time
 import traceback
+from io import StringIO
 
-# Library imports
+# If any other error occurs, let QtPy throw its own exceptions without intervention
 try:
-    from PyQt5 import QtWidgets, QtCore, QtGui
-    from PyQt5.Qt import Qt
-except (ImportError, NameError):
-    raise Exception('PyQt5 is not installed in this Python environment. Go online and download it.')
-
-try:
-    from bs4 import BeautifulSoup
-except (ImportError, NameError):
-    raise Exception('BeautifulSoup4 is not installed in this Python environment. Go online and download it.')
+    from qtpy import QtCore, QtGui, QtWidgets
+except ImportError:
+    raise Exception('QtPy is not installed in this Python environment. Go online and download it.')
 
 try:
     import requests
-except (ImportError, NameError):
+except ImportError:
     raise Exception('requests is not installed in this Python environment. Go online and download it.')
 
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    raise Exception('BeautifulSoup4 is not installed in this Python environment. Go online and download it.')
+
 # Local imports
-import globalz
-from common import printlineInternal
-from console import Console
-from playlist import Playlist
-from plugin import PluginScanner, Plugin
-from scraping import SongScraper, Song
-from settings import Settings, readconfig, writeconfig
+# Make sure all are imported correctly
+try:
+    import globalz
+    from common import printlineInternal
+    from console import Console
+    from playlist import Playlist
+    from plugin import PluginScanner, Plugin
+    from scraping import SongScraper, Song
+    from settings import Settings, readconfig, writeconfig
+except ImportError:
+    raise Exception("One or more program components are missing! Quitting...")
 
 
 def excepthook(*exc_info):
@@ -44,6 +53,8 @@ def excepthook(*exc_info):
     Custom unhandled exceptions handler
     """
     # Strings
+    separator = '-' * 80
+    timeString = time.strftime("%Y-%m-%d, %H:%M:%S")
     msg1 = 'An unhandled exception occurred. Please report the problem to CLF78.'
     msg2 = 'A log will be written to "log.txt".'
     msg3 = 'Error information:'
@@ -52,8 +63,8 @@ def excepthook(*exc_info):
     # Write log to file
     try:
         with open(globalz.logfile, "w") as f:
-            f.write(msg4)
-    except IOError:
+            f.write('\n'.join([separator, timeString, separator, msg4]))
+    except Exception:
         pass
 
     # Show error message
@@ -96,11 +107,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.createMenubar()
 
         # Set the main widget
-        self.w = MainWidget(self)
-        self.setCentralWidget(self.w)
+        self.setCentralWidget(MainWidget(self))
 
         # Set window title and show the window
-        self.setWindowTitle('AngerList')
+        self.setWindowTitle('GimmeMusic')
         self.show()
 
         # Own data
@@ -165,7 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.start()
 
     def printline(self, text: str):
-        self.w.console.textinput.append(text)
+        self.centralWidget().console.textinput.append(text)
 
     def addPlugin(self, plugin: Plugin):
         # Add the plugin to the module list if it doesn't exist yet
@@ -185,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def endPluginScan(self):
         # Enable the start button
         foundplugins = bool(self.modulelist)
-        self.w.startButton.setEnabled(foundplugins)
+        self.centralWidget().startButton.setEnabled(foundplugins)
 
         # Print scan result
         printlineInternal(self, 'Scan completed!' if foundplugins else 'No plugins found!')
@@ -196,7 +206,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def endScraping(self):
         # Print scan result
-        foundsongs = bool(self.w.plist.tree.topLevelItemCount())
+        foundsongs = bool(self.centralWidget().plist.tree.topLevelItemCount())
         printlineInternal(self, 'Scrape completed!' if foundsongs else 'No songs found!')
 
         # Unset thread and worker
@@ -213,21 +223,29 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
 
-    # Add module folder so that we can import stuff easily
+    # Add module folder so that we can import plugins from there
     sys.path.append(globalz.modulefolder)
 
     # Start the application
     app = QtWidgets.QApplication([])
+
+    # Override the exception handler with ours
+    # We must do this after the QApplication is started since it's needed to display the message box
+    sys.excepthook = excepthook
+
+    # Set up the log buffer
+    globalz.logbuffer = StringIO();
+
+    # Run the app
     mw = MainWindow()
     ret = app.exec()
+
+    # Close the log buffer
+    globalz.logbuffer.close()
 
     # Quit the process
     sys.exit(ret)
 
 
 if __name__ == '__main__':
-    # Override the exception handler with ours
-    sys.excepthook = excepthook
-
-    # Run main
     main()
