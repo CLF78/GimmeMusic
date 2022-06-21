@@ -21,6 +21,7 @@ from io import StringIO
 # If any other error occurs, let QtPy throw its own exceptions without intervention
 try:
     from qtpy import QtCore, QtGui, QtWidgets
+    from qtpy.QtCore import Qt
 except ImportError:
     raise Exception('QtPy is not installed in this Python environment. Go online and download it.')
 
@@ -73,7 +74,7 @@ def excepthook(*exc_info):
 
 class MainWidget(QtWidgets.QWidget):
     """
-    The real main window. The other is an imposter!
+    The main window, containing the console and the playlist.
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -97,11 +98,22 @@ class MainWidget(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """
+    The main window. Exciting stuff.
+    """
     def __init__(self):
-        """
-        Fuck you for not letting me set a layout as main widget.
-        """
         super().__init__()
+
+        # Initialize the module list
+        self.modulelist = {}
+
+        # Load config
+        self.config = configparser.ConfigParser()
+        readconfig(self.config)
+
+        # Initialize thread and worker
+        self.thread = None
+        self.worker = None
 
         # Create the menubar
         self.createMenubar()
@@ -113,30 +125,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('GimmeMusic')
         self.show()
 
-        # Own data
-        self.modulelist = {}
-
-        # Load config
-        self.config = configparser.ConfigParser()
-        readconfig(self.config)
-
-        # Default thread and worker
-        self.thread = None
-        self.worker = None
-
-        # Run scanner
+        # Run the plugin scanner
         self.runThread(True)
 
     def createMenubar(self):
         """
-        Sets up the menubar
+        Sets up the menubar, unsurprisingly.
         """
         bar = self.menuBar()
 
         # File Menu
         file = bar.addMenu('File')
-        file.addAction('Options', self.openSettings)
-        file.addAction('Exit', self.close)
+        preficon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileDialogDetailedView)
+        closeicon = self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCancelButton)
+        file.addAction(preficon ,'Preferences', self.openSettings, 'CTRL+P')
+        file.addAction(closeicon, 'Exit', self.close, 'CTRL+Q')
 
     def openSettings(self):
         if self.thread and self.thread.isRunning():
@@ -145,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
             Settings(self).exec()
 
     def runThread(self, isScan: bool):
-        # Setup thread and worker
+        # Set up thread and worker
         self.thread = QtCore.QThread()
         if isScan:
             self.worker = PluginScanner()

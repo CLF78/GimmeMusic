@@ -278,11 +278,9 @@ class PluginSettings(QtWidgets.QWidget):
 
 
 def readconfig(config: configparser.ConfigParser):
-    # Preload max previous date
-    date2 = datetime.date.today() - datetime.timedelta(days=6)
 
-    # Placeholders for eventual missing values
-    config['General'] = {'lastuse': str(date2)}
+    # Initialize config to account for possible missing values
+    config['General'] = {'lastuse': ''}
     config['Blacklist'] = {'blacklist': ''}
     config['Plugins'] = {}
 
@@ -291,8 +289,17 @@ def readconfig(config: configparser.ConfigParser):
         config.read(globalz.configfile)
 
     # Check that the last usage date is not more than a week ago. If so, set it to a week ago
-    date = datetime.datetime.strptime(config['General']['lastuse'], "%Y-%m-%d").date()
-    config['General']['lastuse'] = str(max(date, date2))
+    minDate = datetime.date.today() - datetime.timedelta(days=6)
+
+    # Make sure the date is valid by catching ValueError exceptions
+    try:
+        newDate = datetime.datetime.strptime(config['General']['lastuse'], "%Y-%m-%d").date()
+        newDate = max(newDate, minDate)
+    except ValueError:
+        newDate = minDate
+
+    # Store it
+    config['General']['lastuse'] = str(newDate)
 
 
 def writeconfig(config: configparser.ConfigParser, modulelist: dict):
