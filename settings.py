@@ -5,8 +5,8 @@ import configparser
 import datetime
 import os
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.Qt import Qt
+from qtpy import QtWidgets, QtGui
+from qtpy.QtCore import Qt
 
 import globalz
 from common import getMainWindow

@@ -3,11 +3,19 @@ import os
 import sys
 import types
 
-from PyQt5 import QtCore
+from qtpy import QtCore
 
 import globalz
-from common import deleteModule
+from common import printline
 
+def deleteModule(module: object, modName: str):
+    """
+    Simple helper to delete a module.
+    Use the return value to delete the last reference to the module.
+    """
+    del sys.modules[modName]
+    del module
+    return None
 
 class Plugin:
     def __init__(self, name: str, module: object, modname: str):
@@ -22,15 +30,15 @@ class Plugin:
 
 
 class PluginScanner(QtCore.QObject):
-    finished = QtCore.pyqtSignal()
-    textappended = QtCore.pyqtSignal(str)
-    pluginfound = QtCore.pyqtSignal(Plugin)
+    finished = QtCore.Signal()
+    textappended = QtCore.Signal(str)
+    pluginfound = QtCore.Signal(Plugin)
 
     def run(self):
         """
         The main function
         """
-        self.printline('Initiating plugin scan...')
+        printline(self, 'Initiating plugin scan...')
 
         # Make the modules folder in case it doesn't exist
         os.makedirs(globalz.modulefolder, exist_ok=True)
@@ -52,20 +60,20 @@ class PluginScanner(QtCore.QObject):
                 else:
                     module = importlib.import_module(file[0])
             except Exception as e:
-                self.printline('Failed to import module', file[0] + ':', e)
+                printline(self, 'Failed to import module', file[0] + ':', e)
                 continue
 
             # Check if the required metadata is present
             data = getattr(module, globalz.pluginmeta, None)
             if not isinstance(data, dict) or 'name' not in data:
-                self.printline('Module', file[0], 'is missing the required metadata!')
+                printline(self, 'Module', file[0], 'is missing the required metadata!')
                 module = deleteModule(module, file[0])
                 continue
 
             # Check if the main function exists
             func = getattr(module, globalz.mainfunc, None)
             if not isinstance(func, types.FunctionType):
-                self.printline('Module', file[0], 'is missing the main function!')
+                printline(self, 'Module', file[0], 'is missing the main function!')
                 module = deleteModule(module, file[0])
                 continue
 
@@ -88,10 +96,3 @@ class PluginScanner(QtCore.QObject):
 
         # Emit event when loop ends
         self.finished.emit()
-
-    def printline(self, *args):
-        """
-        Prints text to the console. Works almost like the print function.
-        """
-        # Join the arguments together and emit event
-        self.textappended.emit(' '.join(map(str, args)))

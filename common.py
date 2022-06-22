@@ -1,8 +1,8 @@
 # common.py
 # This contains several functions that can be called from plugins or the program itself
 
-import sys
-
+from qtpy import QtCore
+import globalz
 
 def getMainWindow(self):
     """
@@ -14,18 +14,22 @@ def getMainWindow(self):
     return getMainWindow(parent)
 
 
-def printlineInternal(self, *args):
+def printline(self, *args, **kwargs):
     """
-    Version of printline used internally by the program. DO NOT USE FOR PLUGINS!
+    Prints text to the console
     """
-    getMainWindow(self).printline(' '.join(map(str, args)))
 
+    # Empty the log buffer
+    globalz.logbuffer.seek(0)
+    globalz.logbuffer.truncate()
 
-def deleteModule(module: object, modName: str):
-    """
-    Simple helper to delete a module.
-    Use the return value to delete the last reference to the module.
-    """
-    del sys.modules[modName]
-    del module
-    return None
+    # Print to the buffer
+    print(*args, end='', file=globalz.logbuffer, **kwargs)
+
+    # If the object calling this function has the textappended attribute, emit the signal
+    if hasattr(self, 'textappended'):
+        self.textappended.emit(globalz.logbuffer.getvalue())
+
+    # Else get the main window and append the text
+    else:
+        getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())

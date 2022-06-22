@@ -39,7 +39,7 @@ except ImportError:
 # Make sure all are imported correctly
 try:
     import globalz
-    from common import printlineInternal
+    from common import printline
     from console import Console
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
@@ -148,6 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
             Settings(self).exec()
 
     def runThread(self, isScan: bool):
+
         # Set up thread and worker
         self.thread = QtCore.QThread()
         if isScan:
@@ -167,24 +168,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
 
         # Worker-specific events
-        self.worker.textappended.connect(lambda x: self.printline(x))
+        self.worker.textappended.connect(self.centralWidget().console.textinput.append)
         if isScan:
+            self.worker.pluginfound.connect(self.addPlugin)
             self.thread.finished.connect(self.endPluginScan)
-            self.worker.pluginfound.connect(lambda x: self.addPlugin(x))
         else:
+            # TODO song found event
             self.thread.finished.connect(self.endScraping)
 
         # Start the thread!
         self.thread.start()
 
-    def printline(self, text: str):
-        self.centralWidget().console.textinput.append(text)
-
     def addPlugin(self, plugin: Plugin):
         # Add the plugin to the module list if it doesn't exist yet
         if plugin.modname not in self.modulelist:
             self.modulelist[plugin.modname] = plugin
-            printlineInternal(self, 'Found plugin', f'{plugin.modname}.py!')
+            printline(self, 'Found plugin', f'{plugin.modname}.py!')
 
             # Check if it's already in the config
             if plugin.modname in self.config['Plugins']:
@@ -201,7 +200,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralWidget().startButton.setEnabled(foundplugins)
 
         # Print scan result
-        printlineInternal(self, 'Scan completed!' if foundplugins else 'No plugins found!')
+        printline(self, 'Scan completed!' if foundplugins else 'No plugins found!')
 
         # Unset thread and worker
         self.thread = None
@@ -210,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def endScraping(self):
         # Print scan result
         foundsongs = bool(self.centralWidget().plist.tree.topLevelItemCount())
-        printlineInternal(self, 'Scrape completed!' if foundsongs else 'No songs found!')
+        printline(self, 'Scrape completed!' if foundsongs else 'No songs found!')
 
         # Unset thread and worker
         self.thread = None
