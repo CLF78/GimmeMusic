@@ -3,9 +3,6 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO: lxml import check
-# TODO: add __main__ check to every other file
-
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
 import sys
@@ -121,6 +118,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set the main widget
         self.setCentralWidget(MainWidget(self))
 
+        # Attempt to import lxml
+        try:
+            import lxml
+            globalz.htmlparser = 'lxml'
+        except ImportError:
+            printline('lxml not found, falling back to html.parser...')
+
         # Set window title and show the window
         self.setWindowTitle('GimmeMusic')
         self.show()
@@ -148,6 +152,9 @@ class MainWindow(QtWidgets.QMainWindow):
             Settings(self).exec()
 
     def runThread(self, isScan: bool):
+        """
+        Runs either the plugin scanner or the scraper, depending on the bool.
+        """
 
         # Set up thread and worker
         self.thread = QtCore.QThread()
@@ -168,34 +175,45 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
 
         # Worker-specific events
+        # TODO song found event
         self.worker.textappended.connect(self.centralWidget().console.textinput.append)
         if isScan:
             self.worker.pluginfound.connect(self.addPlugin)
             self.thread.finished.connect(self.endPluginScan)
         else:
-            # TODO song found event
             self.thread.finished.connect(self.endScraping)
 
         # Start the thread!
         self.thread.start()
 
     def addPlugin(self, plugin: Plugin):
-        # Add the plugin to the module list if it doesn't exist yet
+        """
+        Adds a plugin to the dictionary and parses the corresponding config entries.
+        """
+
+        # Add the plugin to the module list if it isn't there yet
         if plugin.modname not in self.modulelist:
             self.modulelist[plugin.modname] = plugin
             printline(self, 'Found plugin', f'{plugin.modname}.py!')
 
-            # Check if it's already in the config
-            if plugin.modname in self.config['Plugins']:
-                plugin.enabled = self.config.getboolean('Plugins', plugin.modname)
+            # Enable it (with sanitized input)
+            try:
+                plugin.enabled = self.config.getboolean('Plugins', plugin.modname, fallback=False)
+            except ValueError:
+                plugin.enabled = False
 
-                # Enable eventual genres
-                for genre in plugin.genres:
-                    confkey = f'{plugin.modname}_{genre}'
-                    plugin.genres[genre] = self.config.getboolean('Plugins', confkey)
+            # Enable genres if specified (with sanitized input)
+            for genre in plugin.genres:
+                confkey = f'{plugin.modname}_{genre}'
+                try:
+                    plugin.genres[genre] = self.config.getboolean('Plugins', confkey, fallback=False)
+                except ValueError:
+                    plugin.genres[genre] = False
 
     def endPluginScan(self):
-        # Enable the start button
+        """
+        Enables the start button and ends the scan.
+        """
         foundplugins = bool(self.modulelist)
         self.centralWidget().startButton.setEnabled(foundplugins)
 
@@ -236,7 +254,7 @@ def main():
     sys.excepthook = excepthook
 
     # Set up the log buffer
-    globalz.logbuffer = StringIO();
+    globalz.logbuffer = StringIO()
 
     # Run the app
     mw = MainWindow()

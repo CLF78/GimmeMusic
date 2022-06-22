@@ -1,7 +1,8 @@
-"""
-Globals to be used by the program.
-NOTE: Do NOT include this in plugins!
-"""
+#!/usr/bin/env python3
+
+# globalz.py
+# This file defines globals to be used by GimmeMusic.
+# NOTE: Do NOT include this in plugins!
 
 import os
 
@@ -18,5 +19,8 @@ configfile = os.path.join(path, 'config.ini')
 modulefolder = os.path.join(path, 'modules')
 
 # Variables
-pluginmeta = 'angerlistdata'
+pluginmeta = 'gimmeplugin'
 mainfunc = 'scrapeMain'
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# playlist.py
+# This file defines GimmeMusic's playlist widget.
+
 from qtpy import QtWidgets
 
 
@@ -22,3 +27,6 @@ class Playlist(QtWidgets.QWidget):
         L.addWidget(self.tree, 1, 0, 1, 2)
         L.addWidget(self.exportSelected, 2, 0)
         L.addWidget(self.removeSelected, 2, 1)
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

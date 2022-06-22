@@ -1,14 +1,17 @@
-import importlib
-import sys
+#!/usr/bin/env python3
+
+# scraping.py
+# This file defines GimmeMusic's scraping functionality.
 
 from qtpy import QtCore
 
 import globalz
 from common import printline
 
+
 class Song:
     """
-    Generic class that stores all the info required by the program.
+    Song metadata holder class.
     """
     def __init__(self, name='Unknown Name', artist='Unknown Artist', album='Unknown Album', genre='Unknown Genre', coverurl='', audiourl=''):
         self.name = name
@@ -19,6 +22,9 @@ class Song:
         self.audiourl = audiourl
 
 class SongScraper(QtCore.QObject):
+    """
+    Plugin runner (this runs on a separate thread from the GUI).
+    """
     finished = QtCore.Signal()
     textappended = QtCore.Signal(str)
     songfound = QtCore.Signal(Song)
@@ -31,9 +37,6 @@ class SongScraper(QtCore.QObject):
         self.modulelist = modulelist
 
     def run(self):
-        """
-        The main function
-        """
         printline(self, 'Initiating song scrape...')
 
         # Run each module
@@ -48,15 +51,12 @@ class SongScraper(QtCore.QObject):
                     func = getattr(module.module, globalz.mainfunc, None)
                     songs = func(module)
                     for song in songs:
-                    	self.songfound.emit(song)
+                        self.songfound.emit(song)
                 except Exception as e:
                     printline(self, 'Failed to execute module', modname + ':', e)
 
         # Emit event when loop ends
         self.finished.emit()
 
-    def addToList(song):
-        """
-        Adds a given song to the playlist.
-        """
-        self.songadded.emit(song)
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

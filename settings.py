@@ -9,7 +9,7 @@ from qtpy import QtWidgets, QtGui
 from qtpy.QtCore import Qt
 
 import globalz
-from common import getMainWindow
+from common import getMainWindow, printline
 
 
 class Settings(QtWidgets.QDialog):
@@ -69,7 +69,7 @@ class Settings(QtWidgets.QDialog):
                     modulelist[pluginName].genres[childName] = bool(child.checkState(0))
 
             # Flaunt our success
-            mw.printline('Settings updated!')
+            printline(self, 'Settings updated!')
 
             # Call original function
             super().closeEvent(e)
@@ -327,3 +327,6 @@ def writeconfig(config: configparser.ConfigParser, modulelist: dict):
     # Write to file
     with open(globalz.configfile, 'w') as f:
         config.write(f)
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

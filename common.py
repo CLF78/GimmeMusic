@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+
 # common.py
-# This contains several functions that can be called from plugins or the program itself
+# This file contains several functions that can be called by GimmeMusic plugins or the program itself.
 
 from qtpy import QtCore
 import globalz
+
 
 def getMainWindow(self):
     """
@@ -33,3 +36,6 @@ def printline(self, *args, **kwargs):
     # Else get the main window and append the text
     else:
         getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# plugin.py
+# This file defines GimmeMusic's plugin architecture.
+
 import importlib
 import os
 import sys
@@ -8,7 +13,8 @@ from qtpy import QtCore
 import globalz
 from common import printline
 
-def deleteModule(module: object, modName: str):
+
+def deleteModule(module: object, modName: str) -> None:
     """
     Simple helper to delete a module.
     Use the return value to delete the last reference to the module.
@@ -17,7 +23,11 @@ def deleteModule(module: object, modName: str):
     del module
     return None
 
+
 class Plugin:
+    """
+    Plugin metadata holder class.
+    """
     def __init__(self, name: str, module: object, modname: str):
         self.name = name
         self.genres = {}
@@ -30,18 +40,21 @@ class Plugin:
 
 
 class PluginScanner(QtCore.QObject):
+    """
+    Plugin scanner (run on a separate thread from the GUI).
+    """
     finished = QtCore.Signal()
     textappended = QtCore.Signal(str)
     pluginfound = QtCore.Signal(Plugin)
 
     def run(self):
-        """
-        The main function
-        """
         printline(self, 'Initiating plugin scan...')
 
         # Make the modules folder in case it doesn't exist
         os.makedirs(globalz.modulefolder, exist_ok=True)
+
+        # Invalidate cache to account for plugins being added during execution
+        importlib.invalidate_caches()
 
         # Get every file in the modules directory
         for file in os.listdir(globalz.modulefolder):
@@ -54,11 +67,9 @@ class PluginScanner(QtCore.QObject):
                 continue
 
             # Try importing the file, skip if it fails
+            # Don't reimport the module if it's already imported
             try:
-                if file[0] in sys.modules:
-                    module = sys.modules[file[0]]
-                else:
-                    module = importlib.import_module(file[0])
+                module = sys.modules.get(file[0], importlib.import_module(file[0]))
             except Exception as e:
                 printline(self, 'Failed to import module', file[0] + ':', e)
                 continue
@@ -96,3 +107,6 @@ class PluginScanner(QtCore.QObject):
 
         # Emit event when loop ends
         self.finished.emit()
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")

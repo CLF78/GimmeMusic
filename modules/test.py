@@ -1,8 +1,26 @@
-angerlistdata = {'name': 'Test Plugin',
+#!/usr/bin/env python3
+
+# modules/test.py
+# This is a test plugin for GimmeMusic, intended to showcase its basic structure.
+
+# Metadata (variable must be named "gimmeplugin" for the plugin to be detected)
+# name = plugin name (string, required)
+# genres = supported genres - each genre is separately toggleable in the settings (list, optional)
+# author = plugin author (string, optional)
+# version = plugin version (string, optional)
+# description = a brief description (string, optional)
+gimmeplugin = {'name': 'Test Plugin',
                  'genres': ['hardcore', 'frenchcore'],
                  'author': 'CLF78',
                  'version': 'TEST',
-                 'description': 'test plugin'}
+                 'description': 'Test plugin.'}
 
-def scrapeMain(moduledata):
+# Main scraping function
+# This will be called by the scraper thread if the plugin is enabled
+# The only argument is a dictionary containing the module's settings indicated by the user
+# The return value is a list of Song instances, which will be added to the playlist widget after this function has run
+def scrapeMain(moduledata: dict) -> list:
 	return []
+
+if __name__ == '__main__':
+    print("Run main.py to access the program!")
