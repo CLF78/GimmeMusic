@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 # settings.py
-# This is the settings window for AngerList.
+# This file defines GimmeMusic's settings window.
 
 import configparser
 import datetime
@@ -303,6 +305,7 @@ def readconfig(config: configparser.ConfigParser):
 
 
 def writeconfig(config: configparser.ConfigParser, modulelist: dict):
+
     # Set date to today
     config['General']['lastuse'] = str(datetime.date.today())
 
@@ -325,8 +328,11 @@ def writeconfig(config: configparser.ConfigParser, modulelist: dict):
             config.remove_section(section)
 
     # Write to file
-    with open(globalz.configfile, 'w') as f:
-        config.write(f)
+    try:
+        with open(globalz.configfile, 'w') as f:
+            config.write(f)
+    except:
+        pass
 
 if __name__ == '__main__':
     print("Run main.py to access the program!")

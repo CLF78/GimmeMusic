@@ -3,6 +3,11 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
+# TODO change the start button's behaviour when scraping
+# TODO finish settings window overview
+# TODO song found event
+# TODO close while running
+
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
 import sys
@@ -71,7 +76,7 @@ def excepthook(*exc_info):
 
 class MainWidget(QtWidgets.QWidget):
     """
-    The main window, containing the console and the playlist.
+    The main widget, containing the console and the playlist.
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -146,8 +151,11 @@ class MainWindow(QtWidgets.QMainWindow):
         file.addAction(closeicon, 'Exit', self.close, 'CTRL+Q')
 
     def openSettings(self):
+        """
+        Opens the settings if a secondary thread isn't running.
+        """
         if self.thread and self.thread.isRunning():
-            QtWidgets.QMessageBox.warning(self, 'AngerList On Air!', 'You can\'t interrupt AngerList while he\'s live. Please wait for the task to finish first.')
+            QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
         else:
             Settings(self).exec()
 
@@ -155,9 +163,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Runs either the plugin scanner or the scraper, depending on the bool.
         """
-
-        # Set up thread and worker
-        self.thread = QtCore.QThread()
+        self.thread = QtCore.QThread(self)
         if isScan:
             self.worker = PluginScanner()
         else:
@@ -175,7 +181,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
 
         # Worker-specific events
-        # TODO song found event
         self.worker.textappended.connect(self.centralWidget().console.textinput.append)
         if isScan:
             self.worker.pluginfound.connect(self.addPlugin)
@@ -190,8 +195,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         Adds a plugin to the dictionary and parses the corresponding config entries.
         """
-
-        # Add the plugin to the module list if it isn't there yet
         if plugin.modname not in self.modulelist:
             self.modulelist[plugin.modname] = plugin
             printline(self, 'Found plugin', f'{plugin.modname}.py!')
@@ -234,7 +237,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker = None
 
     def closeEvent(self, e: QtGui.QCloseEvent):
-        # Update config
+        """
+        Override the close event to save the configuration first.
+        """
         writeconfig(self.config, self.modulelist)
 
         # Original closeEvent
