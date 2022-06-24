@@ -3,7 +3,6 @@
 # common.py
 # This file contains several functions that can be called by GimmeMusic plugins or the program itself.
 
-from qtpy import QtCore
 import globalz
 
 

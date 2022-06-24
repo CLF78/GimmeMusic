@@ -12,6 +12,9 @@ htmlparser = 'html.parser'
 # Log buffer for printing
 logbuffer = None
 
+# Date for scraping and settings
+lastuse = None
+
 # Files/folders
 path = os.path.dirname(os.path.abspath(__file__))
 logfile = os.path.join(path, 'log.txt')

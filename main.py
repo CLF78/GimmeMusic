@@ -23,7 +23,6 @@ from io import StringIO
 # If any other error occurs, let QtPy throw its own exceptions without intervention
 try:
     from qtpy import QtCore, QtGui, QtWidgets
-    from qtpy.QtCore import Qt
 except ImportError:
     raise Exception('QtPy is not installed in this Python environment. Go online and download it.')
 
@@ -45,7 +44,7 @@ try:
     from console import Console
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
-    from scraping import SongScraper, Song
+    from scraping import SongScraper
     from settings import Settings, readconfig, writeconfig
 except ImportError:
     raise Exception("One or more program components are missing! Quitting...")

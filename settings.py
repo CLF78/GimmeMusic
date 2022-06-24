@@ -23,16 +23,12 @@ class Settings(QtWidgets.QDialog):
 
         # Initialize tabs
         self.tabs = QtWidgets.QTabWidget(self)
-        self.tabs.addTab(GeneralSettings(self.tabs), 'General Settings')
-        self.tabs.addTab(ArtistBlacklist(self.tabs), 'Artist Blacklist')
+        self.tabs.addTab(GeneralSettings(self.tabs), 'General')
         self.tabs.addTab(PluginSettings(self.tabs), 'Plugins')
 
         # Add widget to layout
         L = QtWidgets.QGridLayout(self)
         L.addWidget(self.tabs)
-
-        # Prevent changing window size
-        L.setSizeConstraint(QtWidgets.QLayout.SetFixedSize)
 
         # Update window name
         self.setWindowTitle('Settings')
@@ -43,22 +39,22 @@ class Settings(QtWidgets.QDialog):
 
         # Check if scanner is running, prevent closing if so
         if mw.thread and mw.thread.isRunning():
-            QtWidgets.QMessageBox.warning(self, 'AngerList On Air!', 'You can\'t interrupt AngerList while he\'s live. Please wait for the task to finish first.')
+            QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
             e.ignore()
 
         # Otherwise save settings and close
         else:
             # Save general settings
             i = self.tabs.widget(0).maxdays.value()
-            mw.config['General']['lastuse'] = str(datetime.date.today() - datetime.timedelta(days=i - 1))
+            globalz.lastuse = datetime.date.today() - datetime.timedelta(days=i - 1)
 
             # Save artist blacklist
-            tree = self.tabs.widget(1).tree
+            tree = self.tabs.widget(0).tree
             mw.config['Blacklist']['blacklist'] = ','.join([tree.item(i).text() for i in range(tree.count())])
 
             # Save plugins - use the modulelist this time
-            modulelist = getMainWindow(self).modulelist
-            tree = self.tabs.widget(2).pluglist
+            modulelist = mw.modulelist
+            tree = self.tabs.widget(1).pluglist
             for i in range(tree.topLevelItemCount()):
                 item = tree.topLevelItem(i)
                 pluginName = item.data(0, Qt.UserRole)
@@ -81,7 +77,9 @@ class GeneralSettings(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
-        # Max days option
+        ###################
+        # Max Days Option #
+        ###################
         self.maxdays = QtWidgets.QSpinBox(self)
 
         # Set suffix and special value
@@ -93,19 +91,12 @@ class GeneralSettings(QtWidgets.QWidget):
 
         # Set initial value
         currdate = datetime.date.today()
-        olddate = datetime.datetime.strptime(getMainWindow(self).config['General']['lastuse'], "%Y-%m-%d").date()
+        olddate = globalz.lastuse
         self.maxdays.setValue((currdate - olddate).days + 1)
 
-        # Add elements to layout
-        L = QtWidgets.QFormLayout(self)
-        L.addRow('Get releases from the last', self.maxdays)
-
-
-class ArtistBlacklist(QtWidgets.QWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        # Create list widget
+        ####################
+        # Artist Blacklist #
+        ####################
         self.tree = QtWidgets.QListWidget(self)
 
         # Allow editing list items by selecting and clicking
@@ -115,7 +106,7 @@ class ArtistBlacklist(QtWidgets.QWidget):
         blacklist = [i for i in getMainWindow(self).config['Blacklist']['blacklist'].split(',') if i.strip()]
         blacklist.sort()
 
-        # Add the artists to the tree
+        # Fill the tree
         for artist in blacklist:
             newitem = QtWidgets.QListWidgetItem(artist, self.tree)
             newitem.setFlags(newitem.flags() | Qt.ItemIsEditable)
@@ -136,11 +127,35 @@ class ArtistBlacklist(QtWidgets.QWidget):
         # Backup text
         self.backupText = ''
 
-        # Setup layout
+        ################
+        # Layout Setup #
+        ################
+
+        # Create a grid layout
         L = QtWidgets.QGridLayout(self)
-        L.addWidget(self.tree, 0, 0, 1, 2)
-        L.addWidget(self.addButton, 1, 0)
-        L.addWidget(self.removeButton, 1, 1)
+
+        # Add a label
+        L.addWidget(QtWidgets.QLabel('General Settings:', self), 0, 0, 1, 2)
+
+        # Enclose the lastuse setting in a frame
+        frame = QtWidgets.QFrame(self)
+        frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+
+        # Add the lastuse setting to a form layout
+        form = QtWidgets.QFormLayout(frame)
+        form.addRow('Get releases from the last:', self.maxdays)
+
+        # Add the frame to the grid layout
+        L.addWidget(frame, 1, 0, 1, 2)
+
+        # Add 16 pixels padding so it doesn't look awful
+        L.addItem(QtWidgets.QSpacerItem(0, 16), 2, 0, 1, 2)
+
+        # Add the artist blacklist
+        L.addWidget(QtWidgets.QLabel('Artist Blacklist:', self), 3, 0, 1, 2)
+        L.addWidget(self.tree, 4, 0, 1, 2)
+        L.addWidget(self.addButton, 5, 0)
+        L.addWidget(self.removeButton, 5, 1)
 
     def updateButtonStatus(self, currItem):
         # Set "Remove" button if any button is selected
@@ -301,7 +316,7 @@ def readconfig(config: configparser.ConfigParser):
         newDate = minDate
 
     # Store it
-    config['General']['lastuse'] = str(newDate)
+    globalz.lastuse = newDate
 
 
 def writeconfig(config: configparser.ConfigParser, modulelist: dict):
