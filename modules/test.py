@@ -4,8 +4,9 @@
 # This is a test plugin for GimmeMusic, intended to showcase its basic structure.
 
 # Metadata (variable must be named "gimmeplugin" for the plugin to be detected)
+# All fields except "genres" are case-insensitive (genres MUST be lowercase)
 # name = plugin name (string, required)
-# genres = supported genres - each genre is separately toggleable in the settings (list, optional)
+# genres = supported genres, each separately toggleable from settings
 # author = plugin author (string, optional)
 # version = plugin version (string, optional)
 # description = a brief description (string, optional)

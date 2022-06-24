@@ -105,22 +105,22 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Initialize the module list
-        self.modulelist = {}
-
-        # Load config
-        self.config = configparser.ConfigParser()
-        readconfig(self.config)
-
-        # Initialize thread and worker
-        self.thread = None
-        self.worker = None
-
         # Create the menubar
         self.createMenubar()
 
         # Set the main widget
         self.setCentralWidget(MainWidget(self))
+
+        # Set window title and show the window
+        self.setWindowTitle('GimmeMusic')
+        self.show()
+
+        # Initialize the module list
+        self.modulelist = {}
+
+        # Initialize thread and worker
+        self.thread = None
+        self.worker = None
 
         # Attempt to import lxml
         try:
@@ -129,9 +129,9 @@ class MainWindow(QtWidgets.QMainWindow):
         except ImportError:
             printline('lxml not found, falling back to html.parser...')
 
-        # Set window title and show the window
-        self.setWindowTitle('GimmeMusic')
-        self.show()
+        # Load config
+        self.config = configparser.ConfigParser()
+        readconfig(self.config)
 
         # Run the plugin scanner
         self.runThread(True)
@@ -218,8 +218,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         foundplugins = bool(self.modulelist)
         self.centralWidget().startButton.setEnabled(foundplugins)
-
-        # Print scan result
         printline(self, 'Scan completed!' if foundplugins else 'No plugins found!')
 
         # Unset thread and worker

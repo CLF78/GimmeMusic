@@ -5,6 +5,7 @@
 
 import configparser
 import datetime
+import importlib
 import os
 
 from qtpy import QtWidgets, QtGui
@@ -27,24 +28,24 @@ class Settings(QtWidgets.QDialog):
         self.tabs.addTab(PluginSettings(self.tabs), 'Plugins')
 
         # Add widget to layout
-        L = QtWidgets.QGridLayout(self)
+        L = QtWidgets.QVBoxLayout(self)
         L.addWidget(self.tabs)
 
         # Update window name
         self.setWindowTitle('Settings')
 
     def closeEvent(self, e: QtGui.QCloseEvent):
-        # Get main window
+        """
+        Overrides the close event to save the settings to the config.
+        """
         mw = getMainWindow(self)
 
-        # Check if scanner is running, prevent closing if so
+        # Check if the scanner is running, prevent closing if so
         if mw.thread and mw.thread.isRunning():
             QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
             e.ignore()
-
-        # Otherwise save settings and close
         else:
-            # Save general settings
+            # Save lastuse
             i = self.tabs.widget(0).maxdays.value()
             globalz.lastuse = datetime.date.today() - datetime.timedelta(days=i - 1)
 
@@ -102,16 +103,19 @@ class GeneralSettings(QtWidgets.QWidget):
         # Allow editing list items by selecting and clicking
         self.tree.setEditTriggers(QtWidgets.QAbstractItemView.SelectedClicked)
 
-        # Get the artist list and sort it
-        blacklist = [i for i in getMainWindow(self).config['Blacklist']['blacklist'].split(',') if i.strip()]
-        blacklist.sort()
+        # Get the artist list, discarding whitespace and removing duplicates
+        blacklist = getMainWindow(self).config['Blacklist']['blacklist'].split(',')
+        blacklist = set(filter(None, map(lambda i: i.strip(), blacklist)))
 
         # Fill the tree
         for artist in blacklist:
             newitem = QtWidgets.QListWidgetItem(artist, self.tree)
             newitem.setFlags(newitem.flags() | Qt.ItemIsEditable)
 
-        # Events
+        # Sort it
+        self.tree.sortItems(0)
+
+        # Set up events
         self.tree.itemChanged.connect(self.updateItem)
         self.tree.currentItemChanged.connect(self.updateButtonStatus)
 
@@ -158,15 +162,17 @@ class GeneralSettings(QtWidgets.QWidget):
         L.addWidget(self.removeButton, 5, 1)
 
     def updateButtonStatus(self, currItem):
-        # Set "Remove" button if any button is selected
+        """
+        Disables the remove button if no artist is selected and backs up the text for failed renames.
+        """
         self.removeButton.setEnabled(bool(currItem))
-
-        # If so, save its name for possible renaming purposes
         if currItem:
             self.backupText = currItem.text().strip()
 
     def updateItem(self, item: QtWidgets.QListWidgetItem):
-        # Get the current item's text
+        """
+        Restores the artist's name if the new name is empty, else sorts the list again.
+        """
         text = item.text().strip()
 
         # Check if text has changed
@@ -178,12 +184,14 @@ class GeneralSettings(QtWidgets.QWidget):
 
             # Otherwise set the new backup text and sort the list
             else:
-                self.backupText = item.text()
-                self.tree.sortItems(Qt.AscendingOrder)
+                self.backupText = text
+                self.tree.sortItems(0)
 
     def addArtist(self):
-        # Create new item
-        newitem = QtWidgets.QListWidgetItem('New Artist', self.tree)
+        """
+        Adds a new artist to the blacklist.
+        """
+        newitem = QtWidgets.QListWidgetItem('New Entry', self.tree)
 
         # Set it as editable
         newitem.setFlags(newitem.flags() | Qt.ItemIsEditable)
@@ -202,16 +210,19 @@ class PluginSettings(QtWidgets.QWidget):
         # Author label
         self.author = QtWidgets.QLabel(self)
         self.author.setTextFormat(Qt.RichText)
+        self.author.setHidden(True)
 
         # Version label
         self.version = QtWidgets.QLabel(self)
         self.version.setTextFormat(Qt.RichText)
         self.version.setAlignment(Qt.AlignRight)
+        self.version.setHidden(True)
 
         # Description label
         self.desc = QtWidgets.QLabel(self)
         self.desc.setWordWrap(True)
         self.desc.setTextFormat(Qt.RichText)
+        self.desc.setHidden(True)
 
         # Plugin list
         self.pluglist = QtWidgets.QTreeWidget(self)
@@ -219,7 +230,7 @@ class PluginSettings(QtWidgets.QWidget):
         self.pluglist.currentItemChanged.connect(self.updatePluginDesc)
 
         # Refresh Button
-        self.refreshButton = QtWidgets.QPushButton('Rescan', self)
+        self.refreshButton = QtWidgets.QPushButton('Refresh', self)
         self.refreshButton.clicked.connect(self.rescan)
 
         # Make a layout and set it
@@ -230,10 +241,13 @@ class PluginSettings(QtWidgets.QWidget):
         lyt.addWidget(self.version, 2, 1)
         lyt.addWidget(self.desc, 3, 0, 1, 2)
 
+        # Fill the tree
         self.fillTree()
 
     def fillTree(self):
-        # Grab the module list
+        """
+        Takes the module list and fills the tree based on its contents.
+        """
         modulelist = getMainWindow(self).modulelist
         for modname, module in modulelist.items():
 
@@ -259,22 +273,24 @@ class PluginSettings(QtWidgets.QWidget):
         self.pluglist.sortItems(0, Qt.AscendingOrder)
 
     def updatePluginDesc(self, currItem, prevItem):
-        # Clear labels if no item is selected
-        if not currItem:
-            self.author.clear()
-            self.version.clear()
-            self.desc.clear()
-            return
+        """
+        Shows/hides the author/version/description labels and updates their texts.
+        """
+        self.author.setHidden(not currItem)
+        self.version.setHidden(not currItem)
+        self.desc.setHidden(not currItem)
 
         # Set new texts only if the referenced plugin is different
-        elif not (prevItem and currItem.data(0, Qt.UserRole) == prevItem.data(0, Qt.UserRole)):
+        if currItem and not (prevItem and currItem.data(0, Qt.UserRole) == prevItem.data(0, Qt.UserRole)):
             plugin = getMainWindow(self).modulelist[currItem.data(0, Qt.UserRole)]
-            self.author.setText(f"<b>Author:</b>\n{plugin.author if plugin.author else '<i>Unknown</i>'}")
-            self.version.setText(f"<b>Version:</b>\n{plugin.version if plugin.version else '<i>Unknown</i>'}")
+            self.author.setText(f"<b>Author:</b>\n{plugin.author if plugin.author else '<i>N/A</i>'}")
+            self.version.setText(f"<b>Version:</b>\n{plugin.version if plugin.version else '<i>N/A</i>'}")
             self.desc.setText(f"<b>Description:</b>\n{plugin.description if plugin.description else '<i>No description provided.</i>'}")
 
     def rescan(self):
-        # Clear the tree - metadata will clear itself automatically
+        """
+        Clears the plugin list and triggers a rescan.
+        """
         self.pluglist.clear()
 
         # Get main window
@@ -286,6 +302,9 @@ class PluginSettings(QtWidgets.QWidget):
         # Disable the rescan button
         self.refreshButton.setEnabled(False)
 
+        # Invalidate cache to account for plugins being added during execution
+        importlib.invalidate_caches()
+
         # Run the scanner again
         mw.runThread(True)
 
@@ -295,15 +314,19 @@ class PluginSettings(QtWidgets.QWidget):
 
 
 def readconfig(config: configparser.ConfigParser):
-
-    # Initialize config to account for possible missing values
+    """
+    Initializes the configuration data and reads it from an .ini file if possible.
+    """
     config['General'] = {'lastuse': ''}
     config['Blacklist'] = {'blacklist': ''}
     config['Plugins'] = {}
 
     # If the file exists, override the values by reading the file
-    if os.path.isfile(globalz.configfile):
-        config.read(globalz.configfile)
+    try:
+        if os.path.isfile(globalz.configfile):
+            config.read(globalz.configfile)
+    except Exception as e:
+        printline('Failed to read config file:', e)
 
     # Check that the last usage date is not more than a week ago. If so, set it to a week ago
     minDate = datetime.date.today() - datetime.timedelta(days=6)
@@ -320,7 +343,9 @@ def readconfig(config: configparser.ConfigParser):
 
 
 def writeconfig(config: configparser.ConfigParser, modulelist: dict):
-
+    """
+    Writes the settings to an .ini file.
+    """
     # Set date to today
     config['General']['lastuse'] = str(datetime.date.today())
 

@@ -53,9 +53,6 @@ class PluginScanner(QtCore.QObject):
         # Make the modules folder in case it doesn't exist
         os.makedirs(globalz.modulefolder, exist_ok=True)
 
-        # Invalidate cache to account for plugins being added during execution
-        importlib.invalidate_caches()
-
         # Get every file in the modules directory
         for file in os.listdir(globalz.modulefolder):
 
