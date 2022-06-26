@@ -3,10 +3,7 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO change the start button's behaviour when scraping
-# TODO finish settings window overview
 # TODO song found event
-# TODO close while running
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -40,7 +37,7 @@ except ImportError:
 # Make sure all are imported correctly
 try:
     import globalz
-    from common import printline
+    from common import getMainWindow, printline
     from console import Console
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
@@ -89,7 +86,7 @@ class MainWidget(QtWidgets.QWidget):
         # Start button
         self.startButton = QtWidgets.QPushButton('START', self)
         self.startButton.setEnabled(False)
-        self.startButton.clicked.connect(lambda: parent.runThread(False))
+        self.startButton.clicked.connect(self.handleStartButton)
 
         # Set the layout
         L = QtWidgets.QGridLayout(self)
@@ -97,11 +94,22 @@ class MainWidget(QtWidgets.QWidget):
         L.addWidget(self.plist, 0, 1)
         L.addWidget(self.startButton, 1, 0, 1, 2)
 
+    def handleStartButton(self):
+        mw = getMainWindow(self)
+        if mw.thread and mw.thread.isRunning():
+            printline(mw, "Terminating scrape...")
+            mw.stopscrape.emit()
+        else:
+            self.startButton.setText('STOP')
+            mw.runThread(False)
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """
     The main window. Exciting stuff.
     """
+    stopscrape = QtCore.Signal()
+
     def __init__(self):
         super().__init__()
 
@@ -166,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if isScan:
             self.worker = PluginScanner()
         else:
-            self.worker = SongScraper(self.modulelist)
+            self.worker = SongScraper(self)
 
         # Move worker to thread
         self.worker.moveToThread(self.thread)
@@ -225,6 +233,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker = None
 
     def endScraping(self):
+        """
+        Resets the start button and ends the scrape.
+        """
+        self.centralWidget().startButton.setText('START')
+
         # Print scan result
         foundsongs = bool(self.centralWidget().plist.tree.topLevelItemCount())
         printline(self, 'Scrape completed!' if foundsongs else 'No songs found!')
@@ -235,12 +248,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         """
-        Override the close event to save the configuration first.
+        Override the close event to prevent closing during a task and to save the configuration.
         """
-        writeconfig(self.config, self.modulelist)
-
-        # Original closeEvent
-        super().closeEvent(e)
+        if self.thread and self.thread.isRunning():
+            QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
+            e.ignore()
+        else:
+            writeconfig(self.config, self.modulelist)
+            super().closeEvent(e)
 
 
 def main():

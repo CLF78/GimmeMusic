@@ -29,12 +29,14 @@ class SongScraper(QtCore.QObject):
     textappended = QtCore.Signal(str)
     songfound = QtCore.Signal(Song)
 
-    def __init__(self, modulelist):
+    def __init__(self, parent):
         """
         Modified init function so we have access to the modulelist without accessing the rest of the program
         """
         super().__init__()
-        self.modulelist = modulelist
+        self.modulelist = parent.modulelist
+        self.terminate = False
+        parent.stopscrape.connect(lambda: setattr(self, 'terminate', True))
 
     def run(self):
         printline(self, 'Initiating song scrape...')
@@ -42,7 +44,11 @@ class SongScraper(QtCore.QObject):
         # Run each module
         for modname, module in self.modulelist.items():
 
-            # Run only if module is enabled
+            # If the thread was terminated, quit the loop immediately
+            if self.terminate:
+                break
+
+            # Run module only if enabled
             if module.enabled:
                 printline(self, 'Running module', modname + '...')
 

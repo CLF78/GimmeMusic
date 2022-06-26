@@ -42,7 +42,7 @@ class Settings(QtWidgets.QDialog):
 
         # Check if the scanner is running, prevent closing if so
         if mw.thread and mw.thread.isRunning():
-            QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
+            QtWidgets.QMessageBox.warning(self, 'Scanner Running!', 'Please wait for the scan to finish first.')
             e.ignore()
         else:
             # Save lastuse
