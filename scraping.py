@@ -55,7 +55,7 @@ class SongScraper(QtCore.QObject):
                 # Run the module's main function and process the output
                 try:
                     func = getattr(module.module, globalz.mainfunc, None)
-                    songs = func(module)
+                    songs = func(self, module)
                     for song in songs:
                         self.songfound.emit(song)
                 except Exception as e:

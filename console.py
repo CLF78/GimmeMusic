@@ -16,6 +16,7 @@ class Console(QtWidgets.QWidget):
         # Output
         self.textinput = QtWidgets.QTextEdit('Welcome to GimmeMusic!', self)
         self.textinput.setReadOnly(True)
+        self.textinput.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
 
         # Clear button
         self.clearbutton = QtWidgets.QPushButton('Clear Console', self)

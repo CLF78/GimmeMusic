@@ -4,6 +4,7 @@
 # This is the main executable for GimmeMusic.
 
 # TODO song found event
+# TODO improve playlist columns
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -41,7 +42,7 @@ try:
     from console import Console
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
-    from scraping import SongScraper
+    from scraping import SongScraper, Song
     from settings import Settings, readconfig, writeconfig
 except ImportError:
     raise Exception("One or more program components are missing! Quitting...")
@@ -77,11 +78,14 @@ class MainWidget(QtWidgets.QWidget):
     def __init__(self, parent):
         super().__init__(parent)
 
+        # Splitter
+        splitter = QtWidgets.QSplitter(self)
+
         # Console
-        self.console = Console(self)
+        self.console = Console(splitter)
 
         # Playlist
-        self.plist = Playlist(self)
+        self.plist = Playlist(splitter)
 
         # Start button
         self.startButton = QtWidgets.QPushButton('START', self)
@@ -89,10 +93,9 @@ class MainWidget(QtWidgets.QWidget):
         self.startButton.clicked.connect(self.handleStartButton)
 
         # Set the layout
-        L = QtWidgets.QGridLayout(self)
-        L.addWidget(self.console, 0, 0)
-        L.addWidget(self.plist, 0, 1)
-        L.addWidget(self.startButton, 1, 0, 1, 2)
+        L = QtWidgets.QVBoxLayout(self)
+        L.addWidget(splitter)
+        L.addWidget(self.startButton)
 
     def handleStartButton(self):
         mw = getMainWindow(self)
@@ -193,6 +196,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.worker.pluginfound.connect(self.addPlugin)
             self.thread.finished.connect(self.endPluginScan)
         else:
+            self.worker.songfound.connect(self.centralWidget().plist.addEntry)
             self.thread.finished.connect(self.endScraping)
 
         # Start the thread!
@@ -241,6 +245,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Print scan result
         foundsongs = bool(self.centralWidget().plist.tree.topLevelItemCount())
         printline(self, 'Scrape completed!' if foundsongs else 'No songs found!')
+
+        # Enable sorting the tree
+        tree = self.centralWidget().plist.tree.setSortingEnabled(True)
 
         # Unset thread and worker
         self.thread = None
