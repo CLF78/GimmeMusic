@@ -27,7 +27,7 @@ class SongScraper(QtCore.QObject):
     """
     finished = QtCore.Signal()
     textappended = QtCore.Signal(str)
-    songfound = QtCore.Signal(Song)
+    songfound = QtCore.Signal(Song, str)
 
     def __init__(self, parent):
         """
@@ -57,7 +57,7 @@ class SongScraper(QtCore.QObject):
                     func = getattr(module.module, globalz.mainfunc, None)
                     songs = func(self, module)
                     for song in songs:
-                        self.songfound.emit(song)
+                        self.songfound.emit(song, module.name)
                 except Exception as e:
                     printline(self, 'Failed to execute module', modname + ':', e)
 

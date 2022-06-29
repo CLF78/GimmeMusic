@@ -8,7 +8,7 @@ import datetime
 import importlib
 import os
 
-from qtpy import QtWidgets, QtGui
+from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
 
 import globalz
@@ -320,6 +320,7 @@ def readconfig(config: configparser.ConfigParser):
     config['General'] = {'lastuse': ''}
     config['Blacklist'] = {'blacklist': ''}
     config['Plugins'] = {}
+    config['WindowSettings'] = {'mwgeometry': '', 'mwstate': '', 'splitterstate': ''}
 
     # If the file exists, override the values by reading the file
     try:
@@ -342,7 +343,7 @@ def readconfig(config: configparser.ConfigParser):
     globalz.lastuse = newDate
 
 
-def writeconfig(config: configparser.ConfigParser, modulelist: dict):
+def writeconfig(config: configparser.ConfigParser, modulelist: dict, mwgeometry: str, mwstate: str, splitterstate: str):
     """
     Writes the settings to an .ini file.
     """
@@ -362,9 +363,14 @@ def writeconfig(config: configparser.ConfigParser, modulelist: dict):
     else:
         config.remove_section('Plugins')
 
+    # Write window settings
+    config['WindowSettings']['mwgeometry'] = mwgeometry
+    config['WindowSettings']['mwstate'] = mwstate
+    config['WindowSettings']['splitterstate'] = splitterstate
+
     # Remove any other unknown section
     for section in reversed(config.sections()):
-        if section not in ['General', 'Plugins', 'Blacklist']:
+        if section not in ['General', 'Plugins', 'Blacklist', 'WindowSettings']:
             config.remove_section(section)
 
     # Write to file
@@ -373,6 +379,24 @@ def writeconfig(config: configparser.ConfigParser, modulelist: dict):
             config.write(f)
     except:
         pass
+
+
+def writeByteArray(data):
+    """
+    Converts a QByteArray to a string of comma-separated ints.
+    """
+    return ','.join(map(lambda x: str(int.from_bytes(x, 'big')), data))
+
+
+def readByteArray(data: str):
+    """
+    Converts a string of comma-separated ints to a QByteArray.
+    """
+    try:
+        return QtCore.QByteArray(bytearray(map(int, data.split(','))))
+    except:
+        return QtCore.QByteArray(b'')
+
 
 if __name__ == '__main__':
     print("Run main.py to access the program!")

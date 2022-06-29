@@ -4,7 +4,6 @@
 # This is the main executable for GimmeMusic.
 
 # TODO song found event
-# TODO improve playlist columns
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -43,7 +42,7 @@ try:
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
     from scraping import SongScraper, Song
-    from settings import Settings, readconfig, writeconfig
+    from settings import Settings, readconfig, writeconfig, writeByteArray, readByteArray
 except ImportError:
     raise Exception("One or more program components are missing! Quitting...")
 
@@ -79,13 +78,13 @@ class MainWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         # Splitter
-        splitter = QtWidgets.QSplitter(self)
+        self.splitter = QtWidgets.QSplitter(self)
 
         # Console
-        self.console = Console(splitter)
+        self.console = Console(self.splitter)
 
         # Playlist
-        self.plist = Playlist(splitter)
+        self.plist = Playlist(self.splitter)
 
         # Start button
         self.startButton = QtWidgets.QPushButton('START', self)
@@ -94,7 +93,7 @@ class MainWidget(QtWidgets.QWidget):
 
         # Set the layout
         L = QtWidgets.QVBoxLayout(self)
-        L.addWidget(splitter)
+        L.addWidget(self.splitter)
         L.addWidget(self.startButton)
 
     def handleStartButton(self):
@@ -116,16 +115,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Create the menubar
-        self.createMenubar()
-
-        # Set the main widget
-        self.setCentralWidget(MainWidget(self))
-
-        # Set window title and show the window
-        self.setWindowTitle('GimmeMusic')
-        self.show()
-
         # Initialize the module list
         self.modulelist = {}
 
@@ -143,6 +132,23 @@ class MainWindow(QtWidgets.QMainWindow):
         # Load config
         self.config = configparser.ConfigParser()
         readconfig(self.config)
+
+        # Create the menubar
+        self.createMenubar()
+
+        # Set the main widget
+        self.setCentralWidget(MainWidget(self))
+
+        # Set window title
+        self.setWindowTitle('GimmeMusic')
+
+        # Reload state
+        self.restoreState(readByteArray(self.config['WindowSettings']['mwstate']))
+        self.restoreGeometry(readByteArray(self.config['WindowSettings']['mwgeometry']))
+        self.centralWidget().splitter.restoreState(readByteArray(self.config['WindowSettings']['splitterstate']))
+
+        # Show the window
+        self.show()
 
         # Run the plugin scanner
         self.runThread(True)
@@ -255,13 +261,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, e: QtGui.QCloseEvent):
         """
-        Override the close event to prevent closing during a task and to save the configuration.
+        Override the close event to prevent closing during a task (or to save the configuration if none is running).
         """
         if self.thread and self.thread.isRunning():
             QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
             e.ignore()
         else:
-            writeconfig(self.config, self.modulelist)
+            geometry = writeByteArray(self.saveGeometry())
+            state = writeByteArray(self.saveState())
+            splitterstate = writeByteArray(self.centralWidget().splitter.saveState())
+            writeconfig(self.config, self.modulelist, geometry, state, splitterstate)
             super().closeEvent(e)
 
 
