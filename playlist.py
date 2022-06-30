@@ -3,6 +3,8 @@
 # playlist.py
 # This file defines GimmeMusic's playlist widget.
 
+import webbrowser
+
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 
@@ -17,6 +19,12 @@ class Playlist(QtWidgets.QWidget):
 
         # Tree
         self.tree = QtWidgets.QTreeWidget(self)
+
+        # Allow editing list items by selecting and clicking
+        self.tree.setEditTriggers(QtWidgets.QAbstractItemView.SelectedClicked)
+
+        # Set up events
+        self.tree.itemDoubleClicked.connect(lambda song: webbrowser.open(song.data(0, Qt.UserRole).audiourl))
 
         # Set column count and header texts
         self.tree.setColumnCount(6)
@@ -38,10 +46,6 @@ class Playlist(QtWidgets.QWidget):
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Fixed)
         header.resizeSection(0, int(header.fontMetrics().size(0, '✓').height() * 1.5))
 
-        # Play button
-        self.playButton = QtWidgets.QPushButton('Play', self)
-        self.playButton.setEnabled(False)
-
         # Export button
         self.exportSelected = QtWidgets.QPushButton('Export', self)
         self.exportSelected.setEnabled(False)
@@ -53,13 +57,13 @@ class Playlist(QtWidgets.QWidget):
         # Clear button
         self.clearButton = QtWidgets.QPushButton('Clear', self)
         self.clearButton.setEnabled(False)
+        self.clearButton.clicked.connect(self.clearPlaylist)
 
         # Add elements to layout
         L = QtWidgets.QGridLayout(self)
         L.addWidget(self.label, 0, 0, 1, 2)
         L.addWidget(self.tree, 1, 0, 1, 2)
-        L.addWidget(self.playButton, 2, 0)
-        L.addWidget(self.exportSelected, 2, 1)
+        L.addWidget(self.exportSelected, 2, 0, 1, 2)
         L.addWidget(self.removeSelected, 3, 0)
         L.addWidget(self.clearButton, 3, 1)
 
@@ -70,6 +74,12 @@ class Playlist(QtWidgets.QWidget):
         newitem = QtWidgets.QTreeWidgetItem(self.tree, ['', song.name, song.artist, song.album, song.genre, modname])
         newitem.setCheckState(0, Qt.Checked)
         newitem.setData(0, Qt.UserRole, song)
+        newitem.setFlags(newitem.flags() | Qt.ItemIsEditable)
+
+    def clearPlaylist(self):
+        self.tree.clear()
+        self.clearButton.setEnabled(False)
+
 
 if __name__ == '__main__':
     print("Run main.py to access the program!")

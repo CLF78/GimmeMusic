@@ -25,7 +25,7 @@ gimmeplugin = {'name': 'Test Plugin',
 # - A dictionary containing the module's settings indicated by the user
 # The return value is a list of Song instances, which will be added to the playlist widget after this function has run
 def scrapeMain(scraper: SongScraper, moduledata: dict) -> list:
-    return [Song('Test Song 1')]
+    return [Song('Test Song 1', audiourl='https://doc.qt.io/qt-5/qtreewidget.html')]
 
 if __name__ == '__main__':
     print("Run main.py to access the program!")

@@ -3,7 +3,7 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO song found event
+# TODO switch from configparser to QSettings
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -184,6 +184,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.worker = PluginScanner()
         else:
             self.worker = SongScraper(self)
+            self.centralWidget().plist.tree.setSortingEnabled(False)
 
         # Move worker to thread
         self.worker.moveToThread(self.thread)
@@ -253,7 +254,11 @@ class MainWindow(QtWidgets.QMainWindow):
         printline(self, 'Scrape completed!' if foundsongs else 'No songs found!')
 
         # Enable sorting the tree
-        tree = self.centralWidget().plist.tree.setSortingEnabled(True)
+        plist = self.centralWidget().plist
+        plist.tree.setSortingEnabled(True)
+
+        # Enable the clear button
+        plist.clearButton.setEnabled(foundsongs)
 
         # Unset thread and worker
         self.thread = None
