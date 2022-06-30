@@ -3,8 +3,6 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO switch from configparser to QSettings
-
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
 import sys
@@ -12,14 +10,13 @@ if sys.version_info < (3, 7):
     raise Exception('Please update your copy of Python to 3.7 or greater. Currently running on: ' + sys.version.split()[0])
 
 # Standard imports
-import configparser
-import time
 import traceback
 from io import StringIO
 
 # If any other error occurs, let QtPy throw its own exceptions without intervention
 try:
     from qtpy import QtCore, QtGui, QtWidgets
+    from qtpy.QtCore import Qt
 except ImportError:
     raise Exception('QtPy is not installed in this Python environment. Go online and download it.')
 
@@ -41,8 +38,8 @@ try:
     from console import Console
     from playlist import Playlist
     from plugin import PluginScanner, Plugin
-    from scraping import SongScraper, Song
-    from settings import Settings, readconfig, writeconfig, writeByteArray, readByteArray
+    from scraping import SongScraper
+    from settings import Settings, readconfig, writeconfig
 except ImportError:
     raise Exception("One or more program components are missing! Quitting...")
 
@@ -53,7 +50,7 @@ def excepthook(*exc_info):
     """
     # Strings
     separator = '-' * 80
-    timeString = time.strftime("%Y-%m-%d, %H:%M:%S")
+    timeString = QtCore.QDateTime.currentDateTime().toString(Qt.ISODate)
     msg1 = 'An unhandled exception occurred. Please report the problem to CLF78.'
     msg2 = 'A log will be written to "log.txt".'
     msg3 = 'Error information:'
@@ -122,15 +119,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread = None
         self.worker = None
 
-        # Attempt to import lxml
-        try:
-            import lxml
-            globalz.htmlparser = 'lxml'
-        except ImportError:
-            printline('lxml not found, falling back to html.parser...')
-
         # Load config
-        self.config = configparser.ConfigParser()
+        self.config = QtCore.QSettings(globalz.configfile, QtCore.QSettings.IniFormat, self)
+        self.config.setFallbacksEnabled(False)
         readconfig(self.config)
 
         # Create the menubar
@@ -143,12 +134,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('GimmeMusic')
 
         # Reload state
-        self.restoreState(readByteArray(self.config['WindowSettings']['mwstate']))
-        self.restoreGeometry(readByteArray(self.config['WindowSettings']['mwgeometry']))
-        self.centralWidget().splitter.restoreState(readByteArray(self.config['WindowSettings']['splitterstate']))
+        placeholder = QtCore.QByteArray()
+        geometry = self.config.value('WindowSettings/mwgeometry', placeholder)
+        state = self.config.value('WindowSettings/mwstate', placeholder)
+        splitterstate = self.config.value("WindowSettings/splitterstate", placeholder)
+        if not geometry.isEmpty():
+            self.restoreGeometry(geometry)
+        if not state.isEmpty():
+            self.restoreState(state)
+        if not splitterstate.isEmpty():
+            self.centralWidget().splitter.restoreState(splitterstate)
 
         # Show the window
         self.show()
+
+        # Attempt to import lxml
+        try:
+            import lxml
+            globalz.htmlparser = 'lxml'
+        except ImportError:
+            printline('lxml not found, falling back to html.parser...')
 
         # Run the plugin scanner
         self.runThread(True)
@@ -217,19 +222,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.modulelist[plugin.modname] = plugin
             printline(self, 'Found plugin', f'{plugin.modname}.py!')
 
-            # Enable it (with sanitized input)
-            try:
-                plugin.enabled = self.config.getboolean('Plugins', plugin.modname, fallback=False)
-            except ValueError:
-                plugin.enabled = False
-
-            # Enable genres if specified (with sanitized input)
-            for genre in plugin.genres:
-                confkey = f'{plugin.modname}_{genre}'
-                try:
-                    plugin.genres[genre] = self.config.getboolean('Plugins', confkey, fallback=False)
-                except ValueError:
-                    plugin.genres[genre] = False
+            # Enable it if the config says so
+            if plugin.genres:
+                for genre in plugin.genres:
+                    confkey = f'{plugin.modname}_{genre}'
+                    plugin.genres[genre] = self.config.value(f'Plugins/{confkey}', 'false') == 'true'
+            else:
+                plugin.enabled = self.config.value(f'Plugins/{plugin.modname}', 'false') == 'true'
 
     def endPluginScan(self):
         """
@@ -272,10 +271,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, 'Task Running!', 'Please stop the task or wait for it to finish first.')
             e.ignore()
         else:
-            geometry = writeByteArray(self.saveGeometry())
-            state = writeByteArray(self.saveState())
-            splitterstate = writeByteArray(self.centralWidget().splitter.saveState())
-            writeconfig(self.config, self.modulelist, geometry, state, splitterstate)
+            writeconfig(self.config, self.modulelist, self.saveGeometry(), self.saveState(), self.centralWidget().splitter.saveState())
             super().closeEvent(e)
 
 

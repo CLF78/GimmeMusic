@@ -3,10 +3,7 @@
 # settings.py
 # This file defines GimmeMusic's settings window.
 
-import configparser
-import datetime
 import importlib
-import os
 
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
@@ -47,11 +44,11 @@ class Settings(QtWidgets.QDialog):
         else:
             # Save lastuse
             i = self.tabs.widget(0).maxdays.value()
-            globalz.lastuse = datetime.date.today() - datetime.timedelta(days=i - 1)
+            globalz.lastuse = QtCore.QDate.currentDate().addDays(-i - 1)
 
             # Save artist blacklist
             tree = self.tabs.widget(0).tree
-            mw.config['Blacklist']['blacklist'] = ','.join([tree.item(i).text() for i in range(tree.count())])
+            mw.config.setValue('Blacklist/blacklist', ','.join([tree.item(i).text() for i in range(tree.count())]))
 
             # Save plugins - use the modulelist this time
             modulelist = mw.modulelist
@@ -91,9 +88,9 @@ class GeneralSettings(QtWidgets.QWidget):
         self.maxdays.setRange(1, 7)
 
         # Set initial value
-        currdate = datetime.date.today()
+        currdate = QtCore.QDate.currentDate()
         olddate = globalz.lastuse
-        self.maxdays.setValue((currdate - olddate).days + 1)
+        self.maxdays.setValue(olddate.daysTo(currdate) + 1)
 
         ####################
         # Artist Blacklist #
@@ -104,8 +101,8 @@ class GeneralSettings(QtWidgets.QWidget):
         self.tree.setEditTriggers(QtWidgets.QAbstractItemView.SelectedClicked)
 
         # Get the artist list, discarding whitespace and removing duplicates
-        blacklist = getMainWindow(self).config['Blacklist']['blacklist'].split(',')
-        blacklist = set(filter(None, map(lambda i: i.strip(), blacklist)))
+        blacklist = getMainWindow(self).config.value('Blacklist/blacklist', '').split(',')
+        #blacklist = set(filter(None, map(lambda i: i.strip(), blacklist)))
 
         # Fill the tree
         for artist in blacklist:
@@ -313,89 +310,53 @@ class PluginSettings(QtWidgets.QWidget):
         mw.thread.finished.connect(lambda: self.refreshButton.setEnabled(True))
 
 
-def readconfig(config: configparser.ConfigParser):
+def readconfig(config: QtCore.QSettings):
     """
-    Initializes the configuration data and reads it from an .ini file if possible.
+    Initializes the lastuse variable.
     """
-    config['General'] = {'lastuse': ''}
-    config['Blacklist'] = {'blacklist': ''}
-    config['Plugins'] = {}
-    config['WindowSettings'] = {'mwgeometry': '', 'mwstate': '', 'splitterstate': ''}
-
-    # If the file exists, override the values by reading the file
-    try:
-        if os.path.isfile(globalz.configfile):
-            config.read(globalz.configfile)
-    except Exception as e:
-        printline('Failed to read config file:', e)
-
     # Check that the last usage date is not more than a week ago. If so, set it to a week ago
-    minDate = datetime.date.today() - datetime.timedelta(days=6)
+    minDate = QtCore.QDate.currentDate().addDays(-6)
 
-    # Make sure the date is valid by catching ValueError exceptions
-    try:
-        newDate = datetime.datetime.strptime(config['General']['lastuse'], "%Y-%m-%d").date()
-        newDate = max(newDate, minDate)
-    except ValueError:
-        newDate = minDate
+    # Make sure the date is valid by catching exceptions
+    newDate = config.value('General/lastuse', minDate)
+    newDate = max(newDate, minDate)
 
     # Store it
     globalz.lastuse = newDate
 
 
-def writeconfig(config: configparser.ConfigParser, modulelist: dict, mwgeometry: str, mwstate: str, splitterstate: str):
+def writeconfig(config: QtCore.QSettings, modulelist: dict, mwgeometry: QtCore.QByteArray, mwstate: QtCore.QByteArray, splitterstate: QtCore.QByteArray):
     """
     Writes the settings to an .ini file.
     """
     # Set date to today
-    config['General']['lastuse'] = str(datetime.date.today())
+    config.setValue('General/lastuse', QtCore.QDate.currentDate())
 
     # Remove blacklist section if empty
-    if not config['Blacklist']['blacklist']:
-        config.remove_section('Blacklist')
+    if not config.value('Blacklist/blacklist', []):
+        config.remove('Blacklist')
 
-    # Write plugins or remove section if empty
+    # Set plugins or remove section if empty
     if modulelist:
         for module, moduledata in modulelist.items():
-            config['Plugins'][module] = 'yes' if moduledata.enabled else 'no'
+            config.setValue(f'Plugins/{module}', moduledata.enabled)
             for genre, genrestatus in moduledata.genres.items():
-                config['Plugins'][f'{module}_{genre}'] = 'yes' if genrestatus else 'no'
+                config.setValue(f'Plugins/{module}_{genre}', genrestatus)
     else:
-        config.remove_section('Plugins')
+        config.remove('Plugins')
 
-    # Write window settings
-    config['WindowSettings']['mwgeometry'] = mwgeometry
-    config['WindowSettings']['mwstate'] = mwstate
-    config['WindowSettings']['splitterstate'] = splitterstate
+    # Set window settings
+    config.setValue('WindowSettings/mwgeometry', mwgeometry)
+    config.setValue('WindowSettings/mwstate', mwstate)
+    config.setValue('WindowSettings/splitterstate', splitterstate)
 
     # Remove any other unknown section
-    for section in reversed(config.sections()):
-        if section not in ['General', 'Plugins', 'Blacklist', 'WindowSettings']:
-            config.remove_section(section)
+    for section in config.allKeys():
+        if not section.startswith(('General', 'Plugins', 'Blacklist', 'WindowSettings')):
+            config.remove(section)
 
     # Write to file
-    try:
-        with open(globalz.configfile, 'w') as f:
-            config.write(f)
-    except:
-        pass
-
-
-def writeByteArray(data):
-    """
-    Converts a QByteArray to a string of comma-separated ints.
-    """
-    return ','.join(map(lambda x: str(int.from_bytes(x, 'big')), data))
-
-
-def readByteArray(data: str):
-    """
-    Converts a string of comma-separated ints to a QByteArray.
-    """
-    try:
-        return QtCore.QByteArray(bytearray(map(int, data.split(','))))
-    except:
-        return QtCore.QByteArray(b'')
+    config.sync()
 
 
 if __name__ == '__main__':

@@ -6,7 +6,6 @@
 import importlib
 import os
 import sys
-import types
 
 from qtpy import QtCore
 
@@ -36,7 +35,7 @@ class Plugin:
         self.description = ''
         self.module = module
         self.modname = modname
-        self.enabled = True
+        self.enabled = False
 
 
 class PluginScanner(QtCore.QObject):
@@ -80,7 +79,7 @@ class PluginScanner(QtCore.QObject):
 
             # Check if the main function exists
             func = getattr(module, globalz.mainfunc, None)
-            if not isinstance(func, types.FunctionType):
+            if not callable(func):
                 printline(self, 'Module', file[0], 'is missing the main function!')
                 module = deleteModule(module, file[0])
                 continue

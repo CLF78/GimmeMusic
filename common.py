@@ -29,7 +29,7 @@ def printline(self, *args, **kwargs):
     print(*args, end='', file=globalz.logbuffer, **kwargs)
 
     # If the object calling this function has the textappended attribute, emit the signal
-    if hasattr(self, 'textappended'):
+    if hasattr(self, 'textappended') and hasattr(self.textappended, 'emit') and callable(self.textappended.emit):
         self.textappended.emit(globalz.logbuffer.getvalue())
 
     # Else get the main window and append the text
