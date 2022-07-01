@@ -35,7 +35,7 @@ class Plugin:
         self.description = ''
         self.module = module
         self.modname = modname
-        self.enabled = False
+        self.enabled = True
 
 
 class PluginScanner(QtCore.QObject):

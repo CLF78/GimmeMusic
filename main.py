@@ -223,12 +223,12 @@ class MainWindow(QtWidgets.QMainWindow):
             printline(self, 'Found plugin', f'{plugin.modname}.py!')
 
             # Enable it if the config says so
+            plugin.enabled = self.config.value(f'Plugins/{plugin.modname}', 'false') == 'true'
             if plugin.genres:
                 for genre in plugin.genres:
                     confkey = f'{plugin.modname}_{genre}'
                     plugin.genres[genre] = self.config.value(f'Plugins/{confkey}', 'false') == 'true'
-            else:
-                plugin.enabled = self.config.value(f'Plugins/{plugin.modname}', 'false') == 'true'
+
 
     def endPluginScan(self):
         """

@@ -5,10 +5,18 @@
 
 import webbrowser
 
-from qtpy import QtWidgets
+from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import Qt
 
 from scraping import Song
+
+class EditorDelegate(QtWidgets.QItemDelegate):
+    """
+    Empty delegate class to prevent editing some columns of the playlist.
+    """
+    def createEditor(self, parent: QtWidgets.QWidget, option: QtWidgets.QStyleOptionViewItem, index: QtCore.QModelIndex) -> QtWidgets.QWidget:
+        return None
+
 
 class Playlist(QtWidgets.QWidget):
     def __init__(self, parent):
@@ -19,6 +27,14 @@ class Playlist(QtWidgets.QWidget):
 
         # Tree
         self.tree = QtWidgets.QTreeWidget(self)
+
+        # Install an event filter to intercept drag events
+        self.tree.installEventFilter(self)
+
+        # Disable editing column 0 and 5 by using an empty delegate
+        delegate = EditorDelegate(self)
+        self.tree.setItemDelegateForColumn(0, delegate)
+        self.tree.setItemDelegateForColumn(5, delegate)
 
         # Allow editing list items by selecting and clicking
         self.tree.setEditTriggers(QtWidgets.QAbstractItemView.SelectedClicked)
@@ -36,6 +52,9 @@ class Playlist(QtWidgets.QWidget):
         # Make selection span all columns and enable uniform row heights
         self.tree.setAllColumnsShowFocus(True)
         self.tree.setUniformRowHeights(True)
+
+        # Enable reordering items
+        self.tree.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
 
         # Prevent moving the first section
         header = self.tree.header()
@@ -74,11 +93,22 @@ class Playlist(QtWidgets.QWidget):
         newitem = QtWidgets.QTreeWidgetItem(self.tree, ['', song.name, song.artist, song.album, song.genre, modname])
         newitem.setCheckState(0, Qt.Checked)
         newitem.setData(0, Qt.UserRole, song)
-        newitem.setFlags(newitem.flags() | Qt.ItemIsEditable)
+        newitem.setFlags((newitem.flags() | Qt.ItemIsEditable) ^ Qt.ItemIsDropEnabled)
 
     def clearPlaylist(self):
+        """
+        Clears the playlist
+        """
         self.tree.clear()
         self.clearButton.setEnabled(False)
+
+    def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """
+        Filters drag events to disable ordering in the playlist.
+        """
+        if event.type() == QtCore.QEvent.ChildAdded:
+            self.tree.header().setSortIndicator(-1, 0)
+        return super().eventFilter(obj, event)
 
 
 if __name__ == '__main__':
