@@ -256,8 +256,8 @@ class MainWindow(QtWidgets.QMainWindow):
         plist = self.centralWidget().plist
         plist.tree.setSortingEnabled(True)
 
-        # Enable the clear button
-        plist.clearButton.setEnabled(foundsongs)
+        # Update buttons
+        plist.updateButtons()
 
         # Unset thread and worker
         self.thread = None
