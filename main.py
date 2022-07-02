@@ -3,6 +3,8 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
+# TODO request sessions with caching support
+
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
 import sys
