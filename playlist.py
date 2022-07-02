@@ -8,6 +8,7 @@ import webbrowser
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import Qt
 
+from common import printline
 from scraping import Song
 
 class EditorDelegate(QtWidgets.QItemDelegate):
@@ -73,6 +74,7 @@ class Playlist(QtWidgets.QWidget):
         # Export button
         self.exportSelected = QtWidgets.QPushButton('Export', self)
         self.exportSelected.setEnabled(False)
+        self.exportSelected.clicked.connect(self.exportEntry)
 
         # Remove button
         self.removeSelected = QtWidgets.QPushButton('Remove', self)
@@ -110,6 +112,32 @@ class Playlist(QtWidgets.QWidget):
             if self.tree.topLevelItem(i).checkState(0) == Qt.Checked:
                 self.tree.takeTopLevelItem(i)
         self.updateButtons()
+
+    def exportEntry(self):
+        """
+        Exports the playlist to a M3U file.
+        """
+        file = QtWidgets.QFileDialog.getSaveFileName(self,
+                                                'Save Playlist',
+                                                'playlist.m3u',
+                                                'Playlists (*.m3u);;')[0]
+
+        printline(self, 'Exporting playlist to', file + '...')
+        with open(file, 'w', encoding='utf-8', errors='replace') as f:
+            # Write header
+            f.write('#EXTM3U\n')
+
+            # Get all checked items
+            for i in range(self.tree.topLevelItemCount()):
+                item = self.tree.topLevelItem(i)
+                if item.checkState(0) == Qt.Checked:
+                    data = item.data(0, Qt.UserRole)
+
+                    # Write the data
+                    f.write(f'#EXTINF:-1,{data.artist} - {data.name} ({data.album})\n')
+                    f.write(f'{data.audiourl}\n')
+
+        printline(self, 'Export complete!')
 
     def clearPlaylist(self):
         """

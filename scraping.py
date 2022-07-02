@@ -13,12 +13,11 @@ class Song:
     """
     Song metadata holder class.
     """
-    def __init__(self, name='Unknown Name', artist='Unknown Artist', album='Unknown Album', genre='Unknown Genre', coverurl='', audiourl=''):
+    def __init__(self, name='Unknown Name', artist='Unknown Artist', album='Unknown Album', genre='Unknown Genre', audiourl=''):
         self.name = name
         self.artist = artist
         self.album = album
         self.genre = genre
-        self.coverurl = coverurl
         self.audiourl = audiourl
 
 class SongScraper(QtCore.QObject):
