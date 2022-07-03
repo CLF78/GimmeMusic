@@ -3,7 +3,7 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO request sessions with caching support
+# TODO allow clearing the request cache
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -26,6 +26,12 @@ try:
     import requests
 except ImportError:
     raise Exception('requests is not installed in this Python environment. Go online and download it.')
+
+try:
+    from cachecontrol import CacheControl
+    from cachecontrol.caches.file_cache import FileCache
+except ImportError:
+    raise Exception('cachecontrol is not installed in this Python environment. Go online and download it.')
 
 try:
     from bs4 import BeautifulSoup
@@ -156,6 +162,9 @@ class MainWindow(QtWidgets.QMainWindow):
             globalz.htmlparser = 'lxml'
         except ImportError:
             printline('lxml not found, falling back to html.parser...')
+
+        # Create the requests session
+        self.session = CacheControl(requests.Session(), cache=FileCache(globalz.cachefile))
 
         # Run the plugin scanner
         self.runThread(True)

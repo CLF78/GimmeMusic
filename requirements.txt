@@ -1,3 +1,5 @@
 beautifulsoup4
+cachecontrol
+lockfile
 QtPy
 requests

@@ -20,6 +20,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 logfile = os.path.join(path, 'log.txt')
 configfile = os.path.join(path, 'config.ini')
 modulefolder = os.path.join(path, 'modules')
+cachefile = os.path.join(path, '.web_cache')
 
 # Variables
 pluginmeta = 'gimmeplugin'

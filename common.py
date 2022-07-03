@@ -43,10 +43,11 @@ def printline(self, *args, **kwargs):
         getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())
 
 
-def openURL(self, method: str, url: str, session: requests.Session = None, **kwargs):
+def openURL(self, method: str, url: str, clearcookies: bool = True, **kwargs):
     """
     Requests wrapper for plugin use.
     """
+
     # URL sanity check
     if not url:
         printline(self, 'Missing URL!')
@@ -56,11 +57,15 @@ def openURL(self, method: str, url: str, session: requests.Session = None, **kwa
     try:
         printline(self, f'Connecting to <i>{url}</i>...')
 
-        # Get the page with a maximum time of 10 seconds
-        if session:
-            r = session.request(method.upper(), url, timeout=10, **kwargs)
-        else:
-            r = requests.request(method.upper(), url, timeout=10, **kwargs)
+        # Get the session
+        session = getMainWindow(self).session
+
+        # Clear cookies
+        if clearcookies:
+            session.cookies.clear()
+
+        # Make a request (timeout after 10 seconds)
+        r = session.request(method.upper(), url, timeout=10, **kwargs)
 
         # Raise an error if the status code is an error one
         r.raise_for_status()
