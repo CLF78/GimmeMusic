@@ -28,8 +28,7 @@ except ImportError:
     raise Exception('requests is not installed in this Python environment. Go online and download it.')
 
 try:
-    from cachecontrol import CacheControl
-    from cachecontrol.caches.file_cache import FileCache
+    import cachecontrol
 except ImportError:
     raise Exception('cachecontrol is not installed in this Python environment. Go online and download it.')
 
@@ -162,9 +161,6 @@ class MainWindow(QtWidgets.QMainWindow):
             globalz.htmlparser = 'lxml'
         except ImportError:
             printline('lxml not found, falling back to html.parser...')
-
-        # Create the requests session
-        self.session = CacheControl(requests.Session(), cache=FileCache(globalz.cachefile))
 
         # Run the plugin scanner
         self.runThread(True)

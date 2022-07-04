@@ -43,19 +43,21 @@ def printline(self, *args, **kwargs):
         getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())
 
 
-def openURL(self, method: str, url: str, clearcookies: bool = True, **kwargs):
+def openURL(self, method: str, url: str, silent: bool = False, clearcookies: bool = True, **kwargs):
     """
     Requests wrapper for plugin use.
     """
 
     # URL sanity check
     if not url:
-        printline(self, 'Missing URL!')
+        if not silent:
+            printline(self, 'Missing URL!')
         return None
 
     # Try opening the url, catching any error
     try:
-        printline(self, f'Connecting to <i>{url}</i>...')
+        if not silent:
+            printline(self, f'Connecting to <i>{url}</i>...')
 
         # Get the session
         session = getMainWindow(self).session
@@ -72,24 +74,27 @@ def openURL(self, method: str, url: str, clearcookies: bool = True, **kwargs):
         return r
 
     except Exception as e:
-        printline(self, 'An exception occurred while retrieving the page:', e)
+        if not silent:
+            printline(self, 'An exception occurred while retrieving the page:', e)
         return None
 
 
-def getWebPage(self, r):
+def getWebPage(self, r, silent: bool = False):
     """
     BeautifulSoup wrapper for plugin use.
     """
     # Sanity check
     if not r:
-        printline(self, 'Response is empty!')
+        if not silent:
+            printline(self, 'Response is empty!')
         return
 
     # Attempt to parse the page
     try:
         return BeautifulSoup(r.content, globalz.htmlparser)
     except:
-        printline(self, 'Failed to parse webpage!')
+        if not silent:
+            printline(self, 'Failed to parse webpage!')
         return None
 
 

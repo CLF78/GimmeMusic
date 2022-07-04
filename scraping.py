@@ -3,7 +3,10 @@
 # scraping.py
 # This file defines GimmeMusic's scraping functionality.
 
+import requests
 from qtpy import QtCore
+from cachecontrol import CacheControl
+from cachecontrol.caches.file_cache import FileCache
 
 import globalz
 from common import printline
@@ -39,6 +42,9 @@ class SongScraper(QtCore.QObject):
 
     def run(self):
         printline(self, 'Initiating song scrape...')
+
+        # Create the requests session
+        self.session = CacheControl(requests.Session(), cache=FileCache(globalz.cachefile))
 
         # Run each module
         for modname, module in self.modulelist.items():

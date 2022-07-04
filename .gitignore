@@ -131,6 +131,7 @@ dmypy.json
 # My files
 *.m3u
 /old
+/.web_cache
 build.py
 config.ini
 log.txt
