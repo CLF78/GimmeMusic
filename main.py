@@ -4,6 +4,7 @@
 # This is the main executable for GimmeMusic.
 
 # TODO allow clearing the request cache
+# TODO allow changing the fake user agent
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
