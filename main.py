@@ -3,8 +3,8 @@
 # main.py
 # This is the main executable for GimmeMusic.
 
-# TODO allow clearing the request cache
-# TODO allow changing the fake user agent
+# TODO playlist duplicate/blacklist checks
+# TODO soundcloud: song geoblock/private checks
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
@@ -68,7 +68,7 @@ def excepthook(*exc_info):
     try:
         with open(globalz.logfile, "w") as f:
             f.write('\n'.join([separator, timeString, separator, msg4]))
-    except Exception:
+    except:
         pass
 
     # Show error message

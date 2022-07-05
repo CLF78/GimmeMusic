@@ -44,7 +44,7 @@ class SongScraper(QtCore.QObject):
         printline(self, 'Initiating song scrape...')
 
         # Create the requests session
-        self.session = CacheControl(requests.Session(), cache=FileCache(globalz.cachefile))
+        self.session = CacheControl(requests.Session(), cache=FileCache(globalz.cachedir))
 
         # Run each module
         for modname, module in self.modulelist.items():

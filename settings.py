@@ -4,12 +4,14 @@
 # This file defines GimmeMusic's settings window.
 
 import importlib
+import os
+import shutil
 
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
 
 import globalz
-from common import getMainWindow, printline
+from common import getMainWindow, printline, fakeUAHeader
 
 
 class Settings(QtWidgets.QDialog):
@@ -45,6 +47,11 @@ class Settings(QtWidgets.QDialog):
             # Save lastuse
             i = self.tabs.widget(0).maxdays.value()
             globalz.lastuse = QtCore.QDate.currentDate().addDays(-i - 1)
+
+            # Save user agent, if the string isn't empty
+            newua = self.tabs.widget(0).fakeUA.text()
+            if newua:
+                fakeUAHeader['user-agent'] = newua
 
             # Save artist blacklist
             tree = self.tabs.widget(0).tree
@@ -92,6 +99,19 @@ class GeneralSettings(QtWidgets.QWidget):
         olddate = globalz.lastuse
         self.maxdays.setValue(olddate.daysTo(currdate) + 1)
 
+        ##########################
+        # Fake User Agent Option #
+        ##########################
+        self.fakeUA = QtWidgets.QLineEdit(fakeUAHeader['user-agent'], self)
+        self.fakeUA.setPlaceholderText('Insert a User-Agent here...')
+
+        ######################
+        # Clear Cache Option #
+        ######################
+        self.clearCacheBtn = QtWidgets.QPushButton('Clear', self)
+        self.clearCacheBtn.setEnabled(os.path.isdir(globalz.cachedir))
+        self.clearCacheBtn.clicked.connect(self.clearCache)
+
         ####################
         # Artist Blacklist #
         ####################
@@ -101,8 +121,8 @@ class GeneralSettings(QtWidgets.QWidget):
         self.tree.setEditTriggers(QtWidgets.QAbstractItemView.SelectedClicked)
 
         # Get the artist list, discarding whitespace and removing duplicates
-        blacklist = getMainWindow(self).config.value('Blacklist/blacklist', '').split(',')
-        #blacklist = set(filter(None, map(lambda i: i.strip(), blacklist)))
+        blacklist = getMainWindow(self).config.value('Blacklist/blacklist', '')
+        blacklist = blacklist.split(',') if blacklist else []
 
         # Fill the tree
         for artist in blacklist:
@@ -145,6 +165,8 @@ class GeneralSettings(QtWidgets.QWidget):
         # Add the lastuse setting to a form layout
         form = QtWidgets.QFormLayout(frame)
         form.addRow('Get releases from the last:', self.maxdays)
+        form.addRow('Scraper User-Agent:', self.fakeUA)
+        form.addRow('Web Cache:', self.clearCacheBtn)
 
         # Add the frame to the grid layout
         L.addWidget(frame, 1, 0, 1, 2)
@@ -157,6 +179,13 @@ class GeneralSettings(QtWidgets.QWidget):
         L.addWidget(self.tree, 4, 0, 1, 2)
         L.addWidget(self.addButton, 5, 0)
         L.addWidget(self.removeButton, 5, 1)
+
+    def clearCache(self):
+        """
+        Clears the web cache.
+        """
+        shutil.rmtree(globalz.cachedir)
+        self.clearCacheBtn.setEnabled(False)
 
     def updateButtonStatus(self, currItem):
         """
@@ -324,6 +353,9 @@ def readconfig(config: QtCore.QSettings):
     # Store it
     globalz.lastuse = newDate
 
+    # Initialize the fake UA
+    fakeUAHeader['user-agent'] = config.value('General/fakeUA', globalz.defaultUA)
+
 
 def writeconfig(config: QtCore.QSettings, modulelist: dict, mwgeometry: QtCore.QByteArray, mwstate: QtCore.QByteArray, splitterstate: QtCore.QByteArray):
     """
@@ -331,6 +363,9 @@ def writeconfig(config: QtCore.QSettings, modulelist: dict, mwgeometry: QtCore.Q
     """
     # Set date to today
     config.setValue('General/lastuse', QtCore.QDate.currentDate())
+
+    # Set user agent
+    config.setValue('General/fakeUA', fakeUAHeader['user-agent'])
 
     # Remove blacklist section if empty
     if not config.value('Blacklist/blacklist', []):

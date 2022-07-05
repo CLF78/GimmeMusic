@@ -4,11 +4,12 @@
 # This file contains several functions that can be called by GimmeMusic plugins or the program itself.
 
 from bs4 import BeautifulSoup
+from qtpy import QtCore
 
 import globalz
 
-# Fake User Agent for scraping, provided for convenience
-fakeUAHeader = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.193 Safari/537.36 Edg/86.0.622.68'}
+# Fake User Agent header for scraping, provided for convenience
+fakeUAHeader = {'user-agent': ''}
 
 
 def getMainWindow(self):
@@ -95,6 +96,10 @@ def getWebPage(self, r):
     except:
         printline(self, 'Failed to parse webpage!')
         return None
+
+
+def verifyDate(date: QtCore.QDate) -> bool:
+    return date >= globalz.lastuse
 
 
 if __name__ == '__main__':
