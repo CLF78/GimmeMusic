@@ -5,6 +5,7 @@
 
 from bs4 import BeautifulSoup
 from qtpy import QtCore
+from requests import Response
 
 import globalz
 
@@ -12,7 +13,7 @@ import globalz
 fakeUAHeader = {'user-agent': ''}
 
 
-def getMainWindow(self):
+def getMainWindow(self: QtCore.QObject) -> QtCore.QObject:
     """
     Gets the main window from the current widget.
     """
@@ -22,7 +23,7 @@ def getMainWindow(self):
     return getMainWindow(parent)
 
 
-def printline(self, *args, **kwargs):
+def printline(self: QtCore.QObject, *args, **kwargs) -> None:
     """
     Prints text to the console.
     """
@@ -47,7 +48,7 @@ def printline(self, *args, **kwargs):
         getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())
 
 
-def openURL(self, method: str, url: str, silent: bool = True, clearcookies: bool = False, headers=fakeUAHeader, **kwargs):
+def openURL(self: QtCore.QObject, method: str, url: str, silent: bool = True, clearcookies: bool = False, headers: dict = fakeUAHeader, **kwargs) -> Response:
     """
     Requests wrapper for plugin use.
     """
@@ -81,7 +82,7 @@ def openURL(self, method: str, url: str, silent: bool = True, clearcookies: bool
         return None
 
 
-def getWebPage(self, r):
+def getWebPage(self: QtCore.QObject, r: Response) -> BeautifulSoup:
     """
     BeautifulSoup wrapper for plugin use.
     """

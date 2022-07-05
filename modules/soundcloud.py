@@ -14,7 +14,7 @@ from scraping import Song, SongScraper
 gimmeplugin = {'name': 'SoundCloud',
                  'author': 'CLF78',
                  'version': '1.0',
-                 'description': 'SoundCloud user scraper.\n<i>Requires filling the "userlist" variable inside the plugin.</i>'}
+                 'description': 'Stream and listen to music online for free.\n<i>NOTE: Requires filling the "userlist" variable inside the plugin.</i>'}
 
 # User List
 # Make sure this is filled with usernames!
@@ -38,7 +38,7 @@ def downloadSong(scraper: SongScraper, url: str) -> str:
 
 
 # Individual user scraping function
-def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = '0'):
+def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = '0') -> None:
 
     # Get the latest 20 entries
     params = {'client_id': client_id, 'limit': 20, 'offset': offset}
@@ -54,7 +54,7 @@ def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = 
         # Verify timestamp
         date = QtCore.QDate.fromString(track['created_at'], Qt.ISODate)
         if not verifyDate(date):
-            printline(scraper, 'Reached max delta date. Quitting...')
+            printline(scraper, 'Reached max delta date. Moving on...')
             return
 
         # Find the direct download link. If found, append the track to the list
@@ -92,7 +92,7 @@ def findUserID(scraper: SongScraper, username: str, client_id: str) -> str:
 
 
 # Main scraping function
-def scrapeMain(scraper: SongScraper, moduledata: dict):
+def scrapeMain(scraper: SongScraper, moduledata: dict) -> None:
 
     # Initialize variables
     client_id = ''

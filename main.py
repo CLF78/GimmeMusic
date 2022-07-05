@@ -4,7 +4,6 @@
 # This is the main executable for GimmeMusic.
 
 # TODO playlist duplicate/blacklist checks
-# TODO soundcloud: song geoblock/private checks
 
 # Python version check
 # Currently, QtPy only supports Python 3.7+, so we follow suit
