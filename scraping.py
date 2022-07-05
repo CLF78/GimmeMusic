@@ -60,9 +60,7 @@ class SongScraper(QtCore.QObject):
                 # Run the module's main function and process the output
                 try:
                     func = getattr(module.module, globalz.mainfunc, None)
-                    songs = func(self, module)
-                    for song in songs:
-                        self.songfound.emit(song, module.name)
+                    func(self, module)
                 except Exception as e:
                     printline(self, 'Failed to execute module', modname + ':', e)
 

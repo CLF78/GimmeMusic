@@ -3,6 +3,7 @@
 # modules/test.py
 # This is a test plugin for GimmeMusic, intended to showcase its basic structure.
 
+from plugin import Plugin
 from scraping import Song, SongScraper
 
 # Metadata (variable must be named "gimmeplugin" for the plugin to be detected)
@@ -21,11 +22,15 @@ gimmeplugin = {'name': 'Test Plugin',
 # Main scraping function
 # This will be called by the scraper thread if the plugin is enabled
 # The arguments are:
-# - The SongScraper instance, required for printing to the console from a plugin
-# - A dictionary containing the module's settings indicated by the user
-# The return value is a list of Song instances, which will be added to the playlist widget after this function has run
-def scrapeMain(scraper: SongScraper, moduledata: dict) -> list:
-    return [Song('Test Song 1', audiourl='https://doc.qt.io/qt-5/qtreewidget.html')]
+# - The SongScraper instance, required for printing to the console and emitting songfound events
+# - The module instance, containing the settings indicated by the user
+# No return value is expected
+def scrapeMain(scraper: SongScraper, moduledata: Plugin):
+
+    # To add songs to the playlist, emit a songfound event with a Song class instance and the source name
+    # Source name can be grabbed from the module or sent as a string directly
+    scraper.songfound.emit(Song('Test Song 1', audiourl='https://doc.qt.io/qt-5/qtreewidget.html'), moduledata.name)
+
 
 if __name__ == '__main__':
     print("Run main.py to access the program!")

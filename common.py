@@ -47,7 +47,7 @@ def printline(self, *args, **kwargs):
         getMainWindow(self).centralWidget().console.textinput.append(globalz.logbuffer.getvalue())
 
 
-def openURL(self, method: str, url: str, silent: bool = False, clearcookies: bool = False, headers=fakeUAHeader, **kwargs):
+def openURL(self, method: str, url: str, silent: bool = True, clearcookies: bool = False, headers=fakeUAHeader, **kwargs):
     """
     Requests wrapper for plugin use.
     """
