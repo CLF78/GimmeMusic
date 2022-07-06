@@ -8,7 +8,7 @@ import webbrowser
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import Qt
 
-from common import printline
+from common import getMainWindow, printline
 from scraping import Song
 
 class EditorDelegate(QtWidgets.QItemDelegate):
@@ -62,9 +62,9 @@ class Playlist(QtWidgets.QWidget):
         # Enable reordering items
         self.tree.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
 
-        # Prevent moving the first section
+        # Prevent moving sections
         header = self.tree.header()
-        header.setFirstSectionMovable(False)
+        header.setSectionsMovable(False)
 
         # Make all sections the same size, except the first one
         header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
@@ -98,6 +98,23 @@ class Playlist(QtWidgets.QWidget):
         """
         Adds an entry to the playlist.
         """
+
+        # First, check if the artist is blacklisted
+        blacklist = getMainWindow(self).config.value('Blacklist/blacklist', '')
+        blacklist = blacklist.split(',') if blacklist else []
+        for artist in blacklist:
+            if artist in song.artist:
+                printline(self, 'Artist', song.artist, 'is blacklisted. Skipping...')
+                return
+
+        # Then, check for duplicates
+        for i in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(i)
+            if item.text(1) == song.name and item.text(2) == song.artist:
+                printline(self, 'Duplicate entry for', f'{song.name}. Skipping...')
+                return
+
+        # All checks passed, add it!
         newitem = QtWidgets.QTreeWidgetItem(self.tree, ['', song.name, song.artist, song.album, song.genre, modname])
         newitem.setCheckState(0, Qt.Unchecked)
         newitem.setData(0, Qt.UserRole, song)
