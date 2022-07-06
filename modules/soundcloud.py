@@ -57,6 +57,10 @@ def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = 
             printline(scraper, 'Reached max delta date. Moving on...')
             return
 
+        # Skip tracks longer than 15 minutes
+        if track['duration'] > 900000:
+            continue
+
         # Find the direct download link. If found, append the track to the list
         url = downloadSong(scraper, track['permalink_url'])
         if url:

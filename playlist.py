@@ -151,8 +151,10 @@ class Playlist(QtWidgets.QWidget):
                     data = item.data(0, Qt.UserRole)
 
                     # Write the data
-                    f.write(f'#EXTINF:-1,{data.artist} - {data.name} ({data.album})\n')
-                    f.write(f'{data.audiourl}\n')
+                    f.write(f'#EXTINF:-1,{data.artist} - {data.name}')
+                    if data.album:
+                        f.write(f' ({data.album})')
+                    f.write(f'\n{data.audiourl}\n')
 
         printline(self, 'Export complete!')
 

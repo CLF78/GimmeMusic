@@ -14,7 +14,7 @@ gimmeplugin = {'name': 'Hardstyle.com',
                  'genres': ['hardstyle', 'hardcore', 'freestyle', 'hard dance', 'frenchcore', 'uptempo', 'happy hardcore'],
                  'author': 'CLF78',
                  'version': '1.0',
-                 'description': 'Leading download portal for the harder styles.'}
+                 'description': 'The leading download and merchandise shop for the lovers of the Hardstyle scene.'}
 
 baseURL = 'https://music.hardstyle.com/%s-releases/page/%d'
 downloadURL = 'https://preview.content.hardstyle.com/index2.php?id=%s'

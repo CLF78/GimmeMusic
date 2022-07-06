@@ -253,6 +253,7 @@ class PluginSettings(QtWidgets.QWidget):
         # Plugin list
         self.pluglist = QtWidgets.QTreeWidget(self)
         self.pluglist.setHeaderHidden(True)
+        self.pluglist.itemClicked.connect(self.updatePluginDesc)
         self.pluglist.currentItemChanged.connect(self.updatePluginDesc)
 
         # Refresh Button
@@ -287,7 +288,7 @@ class PluginSettings(QtWidgets.QWidget):
             if module.genres:
                 newitem.setFlags(newitem.flags() | Qt.ItemIsAutoTristate)
                 for genre, enabled in module.genres.items():
-                    newChild = QtWidgets.QTreeWidgetItem(newitem, [f'{module.name} - {genre.title()}'])
+                    newChild = QtWidgets.QTreeWidgetItem(newitem, [genre.title()])
                     newChild.setCheckState(0, enabled * 2)
                     newChild.setData(0, Qt.UserRole, modname)
 
