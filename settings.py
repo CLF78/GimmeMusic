@@ -68,7 +68,7 @@ class Settings(QtWidgets.QDialog):
                 # Save the children!
                 for j in range(item.childCount()):
                     child = item.child(j)
-                    childName = child.text(0)[len(item.text(0)) + 3:].lower()
+                    childName = child.text(0).lower()
                     modulelist[pluginName].genres[childName] = bool(child.checkState(0))
 
             # Flaunt our success

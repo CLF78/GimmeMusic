@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # modules/hardstylecom.py
-# Hardstyle.com Plugin
+# Hardstyle.com Scraper
 
 from bs4.element import Tag
 from qtpy import QtCore

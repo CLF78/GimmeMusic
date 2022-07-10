@@ -8,6 +8,7 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 
 from common import openURL, printline, verifyDate
+from plugin import Plugin
 from scraping import Song, SongScraper
 
 # Metadata
@@ -96,7 +97,7 @@ def findUserID(scraper: SongScraper, username: str, client_id: str) -> str:
 
 
 # Main scraping function
-def scrapeMain(scraper: SongScraper, moduledata: dict) -> None:
+def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
 
     # Initialize variables
     client_id = ''
