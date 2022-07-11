@@ -135,7 +135,10 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
         if type(user) == str:
             printline(scraper, 'Processing user', user + '...')
             userid = findUserID(scraper, user, client_id)
-            scrapeUser(scraper, userid, client_id)
+            if userid:
+                scrapeUser(scraper, userid, client_id)
+            else:
+                printline(scraper, 'Invalid user list entry', user)
         else:
             printline(scraper, 'Invalid user list entry', user)
 

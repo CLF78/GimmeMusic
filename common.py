@@ -58,6 +58,11 @@ def openURL(self: QtCore.QObject, method: str, url: str, silent: bool = True, cl
         printline(self, 'Missing URL!')
         return None
 
+    # Force plugin failure if termination was invoked
+    if self.terminate:
+        printline(self, 'Termination request received, skipping...')
+        return None
+
     # Try opening the url, catching any error
     try:
         if not silent:
@@ -89,7 +94,12 @@ def getWebPage(self: QtCore.QObject, r: Response) -> BeautifulSoup:
     # Sanity check
     if not r:
         printline(self, 'Response is empty!')
-        return
+        return None
+
+    # Force plugin failure if termination was invoked
+    if self.terminate:
+        printline(self, 'Termination request received, skipping...')
+        return None
 
     # Attempt to parse the page
     try:

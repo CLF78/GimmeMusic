@@ -103,6 +103,7 @@ class MainWidget(QtWidgets.QWidget):
         if mw.thread and mw.thread.isRunning():
             printline(mw, "Terminating scrape...")
             mw.stopscrape.emit()
+            self.startButton.setEnabled(False)
         else:
             self.startButton.setText('STOP')
             mw.runThread(False)
@@ -252,6 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Resets the start button and ends the scrape.
         """
         self.centralWidget().startButton.setText('START')
+        self.centralWidget().startButton.setEnabled(True)
 
         # Print scan result
         foundsongs = bool(self.centralWidget().plist.tree.topLevelItemCount())
