@@ -15,8 +15,8 @@ from scraping import Song, SongScraper
 # Metadata
 gimmeplugin = {'name': 'SoundCloud',
                  'author': 'CLF78',
-                 'version': '1.0',
-                 'description': 'Stream and listen to music online for free.\n<i>NOTE: Requires filling the "userlist" variable inside the plugin.</i>'}
+                 'version': '1.1',
+                 'description': 'Stream and listen to music online for free.\n<i>NOTE: Add users you want to check to the file "soundcloudusers.txt" in the "modules" folder.</i>'}
 
 # Core URLs
 homeurl='https://soundcloud.com'
