@@ -3,11 +3,12 @@
 # modules/soundcloud.py
 # SoundCloud User scraper
 
+import os
 import re
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 
-from common import openURL, printline, verifyDate
+from common import openURL, printline, verifyDate, getAbsPath
 from plugin import Plugin
 from scraping import Song, SongScraper
 
@@ -17,15 +18,11 @@ gimmeplugin = {'name': 'SoundCloud',
                  'version': '1.0',
                  'description': 'Stream and listen to music online for free.\n<i>NOTE: Requires filling the "userlist" variable inside the plugin.</i>'}
 
-# User List
-# Make sure this is filled with usernames!
-# Example: https://soundcloud.com/fwxx -> fwxx
-userlist = ['fwxx']
-
 # Core URLs
 homeurl='https://soundcloud.com'
 apiurl='https://api-v2.soundcloud.com'
 downloadurl='https://visoundcloud.com/ajax.php'
+userlistpath = getAbsPath('soundcloudusers.txt')
 
 
 # Find download link using an external website
@@ -103,7 +100,7 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
     client_id = ''
 
     # Check if the userlist is valid
-    if 'userlist' not in globals() or not userlist or type(userlist) != list:
+    if not os.path.isfile(userlistpath):
         printline(scraper, 'User list not found!')
         return
 
@@ -130,17 +127,19 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
         printline(scraper, 'Could not find Client ID! Bailing...')
         return
 
+    # Open the user list
+    with open(userlistpath) as f:
+        userlist = f.read().splitlines()
+
     # Parse each user
     for user in userlist:
-        if type(user) == str:
+        if user:
             printline(scraper, 'Processing user', user + '...')
             userid = findUserID(scraper, user, client_id)
             if userid:
                 scrapeUser(scraper, userid, client_id)
             else:
                 printline(scraper, 'Invalid user list entry', user)
-        else:
-            printline(scraper, 'Invalid user list entry', user)
 
 
 if __name__ == '__main__':

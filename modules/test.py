@@ -9,12 +9,12 @@ from scraping import Song, SongScraper
 # Metadata (variable must be named "gimmeplugin" for the plugin to be detected)
 # All fields except "genres" are case-insensitive (genres MUST be lowercase)
 # name = plugin name (string, required)
-# genres = supported genres, each separately toggleable from settings
+# genres = supported genres, each separately toggleable from settings (list, optional)
 # author = plugin author (string, optional)
 # version = plugin version (string, optional)
 # description = a brief description (string, optional)
 gimmeplugin = {'name': 'Test Plugin',
-                 'genres': ['hardcore', 'frenchcore'],
+                 'genres': ['house', 'techno'],
                  'author': 'CLF78',
                  'version': 'TEST',
                  'description': 'Test plugin.'}
@@ -25,7 +25,7 @@ gimmeplugin = {'name': 'Test Plugin',
 # - The SongScraper instance, required for printing to the console and emitting songfound events
 # - The module instance, containing the settings indicated by the user
 # No return value is expected
-def scrapeMain(scraper: SongScraper, moduledata: Plugin):
+def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
 
     # To add songs to the playlist, emit a songfound event with a Song class instance and the source name
     # Source name can be grabbed from the module or sent as a string directly

@@ -3,6 +3,8 @@
 # common.py
 # This file contains several functions that can be called by GimmeMusic plugins or the program itself.
 
+import os
+
 from bs4 import BeautifulSoup
 from qtpy import QtCore
 from requests import Response
@@ -109,7 +111,17 @@ def getWebPage(self: QtCore.QObject, r: Response) -> BeautifulSoup:
         return None
 
 
+def getAbsPath(path):
+    """
+    Gets a file inside the module folder.
+    """
+    return os.path.join(globalz.modulefolder, path)
+
+
 def verifyDate(date: QtCore.QDate) -> bool:
+    """
+    Verifies that the date given is in the user's allowed range.
+    """
     return date >= globalz.lastuse
 
 

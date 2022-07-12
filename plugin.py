@@ -62,6 +62,10 @@ class PluginScanner(QtCore.QObject):
             if file[1] != '.py':
                 continue
 
+            # Intentionally skip test.py
+            if file[0] == 'test':
+                continue
+
             # Try importing the file, skip if it fails
             # Don't reimport the module if it's already imported
             try:
