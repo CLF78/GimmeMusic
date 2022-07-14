@@ -147,7 +147,6 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
 
             # Run subroutine
             scrapeGenre(scraper, genre)
-            break
 
 
 if __name__ == '__main__':

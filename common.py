@@ -118,6 +118,13 @@ def getAbsPath(path):
     return os.path.join(globalz.modulefolder, path)
 
 
+def getLastUse() -> QtCore.QDate:
+    """
+    Returns lastuse (for plugin use).
+    """
+    return globalz.lastuse
+
+
 def verifyDate(date: QtCore.QDate) -> bool:
     """
     Verifies that the date given is in the user's allowed range.
