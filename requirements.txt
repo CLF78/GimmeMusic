@@ -1,5 +1,4 @@
-beautifulsoup4
-cachecontrol
-lockfile
+beautifulsoup4[lxml]
+cachecontrol[filecache]
 QtPy
 requests
