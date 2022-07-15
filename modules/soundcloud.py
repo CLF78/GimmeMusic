@@ -8,7 +8,7 @@ import re
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 
-from common import openURL, printline, verifyDate, getAbsPath
+from common import getAbsPath, openURL, printline, verifyDate
 from plugin import Plugin
 from scraping import Song, SongScraper
 
@@ -77,19 +77,23 @@ def findUserID(scraper: SongScraper, username: str, client_id: str) -> str:
 
     # Get the user id by executing a search query for the username
     # Not my proudest solution, but it does the job without requiring an API key (which SC doesn't even provide)
-    params = {'q': username, 'client_id': client_id, 'limit': 1}
-    searchresults = openURL(scraper, 'get', f'{apiurl}/search', params=params)
+    params = {'q': username, 'client_id': client_id, 'limit': 20}
+    searchresults = openURL(scraper, 'get', f'{apiurl}/search/users', params=params)
     if searchresults:
 
         # Make sure the result matches the username given
         json = searchresults.json()
-        if json['total_results'] and json['collection'][0]['permalink_url'].split('/')[-1] == username:
-            userid = json['collection'][0]['urn'].split(':')[2]
-            printline(scraper, 'Found userid:', userid)
-        else:
-            printline(scraper, 'Username', username, 'not found!')
+        if json['total_results']:
+            for entry in json['collection']:
+                if entry['permalink_url'].split('/')[-1] == username:
+                    userid = entry['urn'].split(':')[2]
+                    break
 
     # Return the ID
+    if userid:
+        printline(scraper, 'Found userid:', userid)
+    else:
+        printline(scraper, 'Username', username, 'not found!')
     return userid
 
 

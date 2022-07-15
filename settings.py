@@ -46,7 +46,7 @@ class Settings(QtWidgets.QDialog):
         else:
             # Save lastuse
             i = self.tabs.widget(0).maxdays.value()
-            globalz.lastuse = QtCore.QDate.currentDate().addDays(-i - 1)
+            globalz.lastuse = QtCore.QDate.currentDate().addDays(-i + 1)
 
             # Save user agent, if the string isn't empty
             newua = self.tabs.widget(0).fakeUA.text()
