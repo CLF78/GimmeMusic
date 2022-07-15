@@ -9,8 +9,4 @@ GimmeMusic is a GUI scraper written in Python, whose goal is to collect the late
     - [PyQt6 6.2.0 (or newer)](https://pypi.org/project/PyQt6/)
     - [PySide6 6.2.0 (or newer)](https://pypi.org/project/PySide6/)
 * Install the remaining dependencies through `pip` using `requirements.txt` ([Guide](https://pip.pypa.io/en/latest/user_guide/#requirements-files))
-* Execute the following command in a command prompt:
-
-    python3 main.py
-
-You can replace `python3` with the path to your Python executable, including the executable name and `main.py` with the path to `main.py` (including the filename).
+* Execute the command `python3 main.py` from the program's folder.
