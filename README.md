@@ -19,7 +19,7 @@ The currently implemented plugins are websites that the author is personally int
 * JunoDownload
 * SoundCloud (needs improvements)
 
-# Planned Plugins
+## Planned Plugins
 * Bandcamp
 * YouTube
 * ...more? Feel free to submit any plugin or request for one!
