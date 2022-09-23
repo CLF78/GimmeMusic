@@ -10,3 +10,16 @@ GimmeMusic is a GUI scraper written in Python, whose goal is to collect the late
     - [PySide6 6.2.0 (or newer)](https://pypi.org/project/PySide6/)
 * Install the remaining dependencies through `pip` using `requirements.txt` ([Guide](https://pip.pypa.io/en/latest/user_guide/#requirements-files))
 * Execute the command `python3 main.py` from the program's folder.
+
+## Implemented Plugins
+The currently implemented plugins are websites that the author is personally interested in, but more may eventually be added:
+* Beatport
+* Hardstyle.com
+* HardTunes
+* JunoDownload
+* SoundCloud (needs improvements)
+
+# Planned Plugins
+* Bandcamp
+* YouTube
+* ...more? Feel free to submit any plugin or request for one!
