@@ -9,31 +9,19 @@ from qtpy import QtCore
 from qtpy.QtCore import Qt
 
 from common import getAbsPath, openURL, printline, verifyDate
-from plugin import Plugin
+from plugin import Plugin, PluginScanner
 from scraping import Song, SongScraper
 
 # Metadata
 gimmeplugin = {'name': 'SoundCloud',
                  'author': 'CLF78',
-                 'version': '1.1',
+                 'version': '2.0',
                  'description': 'Stream and listen to music online for free.\n<i>NOTE: Add users you want to check to the file "soundcloudusers.txt" in the "modules" folder.</i>'}
 
 # Core URLs
 homeurl='https://soundcloud.com'
 apiurl='https://api-v2.soundcloud.com'
-downloadurl='https://visoundcloud.com/ajax.php'
 userlistpath = getAbsPath('soundcloudusers.txt')
-
-
-# Find download link using an external website
-def downloadSong(scraper: SongScraper, url: str) -> str:
-    printline(scraper, 'Finding download link...')
-    response = openURL(scraper, 'post', downloadurl, params={'url': url})
-    if response:
-        printline(scraper, 'Found!')
-        return response.json()['url']
-    return ''
-
 
 # Individual user scraping function
 def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = '0') -> None:
@@ -60,9 +48,7 @@ def scrapeUser(scraper: SongScraper, userid: str, client_id: str, offset: str = 
             continue
 
         # Find the direct download link. If found, append the track to the list
-        url = downloadSong(scraper, track['permalink_url'])
-        if url:
-            scraper.songfound.emit(Song(name=track['title'], artist=track['user']['username'], genre=track['genre'], audiourl=url), 'SoundCloud')
+        scraper.songfound.emit(Song(name=track['title'], artist=track['user']['username'], genre=track['genre'], audiourl=track['permalink_url']), 'SoundCloud')
 
     # If we reach the end of the loop, call this function again with a different offset
     lastdate = track['created_at']
@@ -103,11 +89,6 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
     # Initialize variables
     client_id = ''
 
-    # Check if the userlist is valid
-    if not os.path.isfile(userlistpath):
-        printline(scraper, 'User list not found!')
-        return
-
     # To make API calls, we need a client ID. Therefore, download the main page
     printline(scraper, 'Requesting Client ID...')
     homePage = openURL(scraper, 'get', homeurl, clearcookies=True)
@@ -131,19 +112,35 @@ def scrapeMain(scraper: SongScraper, moduledata: Plugin) -> None:
         printline(scraper, 'Could not find Client ID! Bailing...')
         return
 
-    # Open the user list
-    with open(userlistpath) as f:
-        userlist = f.read().splitlines()
-
     # Parse each user
-    for user in userlist:
-        if user:
+    for user, enabled in moduledata.genres.items():
+        if enabled:
             printline(scraper, 'Processing user', user + '...')
             userid = findUserID(scraper, user, client_id)
             if userid:
                 scrapeUser(scraper, userid, client_id)
             else:
                 printline(scraper, 'Invalid user list entry', user)
+
+
+def scanMain(scanner: PluginScanner, moduledata: Plugin):
+
+    # Check if the user list exists
+    if not os.path.isfile(userlistpath):
+        printline(scanner, 'User list not found!')
+        return False
+
+    # Open it
+    with open(userlistpath) as f:
+        users = f.read().splitlines()
+
+    # Add each valid line as a genre (default to enabled)
+    for user in users:
+        if user:
+            moduledata.genres[user] = True
+
+    # If the resulting list is empty, do not load the plugin
+    return bool(moduledata.genres)
 
 
 if __name__ == '__main__':

@@ -62,10 +62,6 @@ class PluginScanner(QtCore.QObject):
             if file[1] != '.py':
                 continue
 
-            # Intentionally skip test.py
-            if file[0] == 'test':
-                continue
-
             # Try importing the file, skip if it fails
             # Don't reimport the module if it's already imported
             try:
@@ -81,7 +77,7 @@ class PluginScanner(QtCore.QObject):
                 module = deleteModule(module, file[0])
                 continue
 
-            # Check if the main function exists
+            # Check if the scrape function exists
             func = getattr(module, globalz.mainfunc, None)
             if not callable(func):
                 printline(self, 'Module', file[0], 'is missing the main function!')
@@ -102,8 +98,17 @@ class PluginScanner(QtCore.QObject):
                 for genre in genres:
                     plugin.genres[str(genre)] = True
 
-            # Emit event to save plugin
-            self.pluginfound.emit(plugin)
+            # Assume the plugin will be added
+            success = True
+
+            # Check if the scan function exists and run it if so
+            func = getattr(module, globalz.scanfunc, None)
+            if callable(func):
+                success = func(self, plugin)
+
+            # Emit event to save plugin on success
+            if success:
+                self.pluginfound.emit(plugin)
 
         # Emit event when loop ends
         self.finished.emit()
