@@ -17,7 +17,8 @@ The currently implemented plugins are websites that the author is personally int
 * Hardstyle.com
 * HardTunes
 * JunoDownload
-* SoundCloud (needs improvements)
+* SoundCloud
+* UndergroundTekno
 
 ## Planned Plugins
 * Bandcamp
